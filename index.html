@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlazeFire Arena — Free Fire Tournaments</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ===== GLOBAL RESET & VARIABLES ===== */
+:root {
+  --fire: #FF4500;
+  --fire2: #FF6B00;
+  --gold: #FFD700;
+  --dark: #080A0F;
+  --dark2: #0D1117;
+  --dark3: #161B22;
+  --card: #111827;
+  --border: #1F2937;
+  --text: #E5E7EB;
+  --muted: #6B7280;
+  --green: #10B981;
+  --cyan: #06B6D4;
+  --red: #EF4444;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Global grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255,69,0,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,0,0.07) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.008) 60px, rgba(255,255,255,0.008) 61px),
+    repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.008) 60px, rgba(255,255,255,0.008) 61px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== PAGES (Router) ===== */
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ===== SHARED AUTH STYLES ===== */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-left {
+  flex: 1;
+  background: linear-gradient(145deg, #0a0200, #1a0800, #2d0f00);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(255,69,0,0.25) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cpath d='M40 5 L50 30 L75 30 L55 47 L63 72 L40 55 L17 72 L25 47 L5 30 L30 30Z' fill='rgba(255,69,0,0.04)'/%3E%3C/g%3E%3C/svg%3E") center/80px repeat;
+  pointer-events: none;
+}
+
+.auth-left-content { position: relative; z-index: 1; text-align: center; max-width: 400px; }
+
+.auth-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.auth-logo-sub {
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3rem;
+}
+
+.auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,69,0,0.15);
+  border-radius: 4px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.auth-feature-icon { font-size: 1.8rem; flex-shrink: 0; }
+
+.auth-feature-text h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.2rem;
+}
+
+.auth-feature-text p { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+
+.auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: var(--green);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2rem;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* AUTH RIGHT PANEL */
+.auth-right {
+  width: 480px;
+  background: var(--dark2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  border-left: 1px solid var(--border);
+}
+
+.auth-form-box { width: 100%; max-width: 400px; }
+
+.auth-form-box h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.4rem;
+  color: white;
+}
+
+.auth-form-box .subtitle {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.auth-form-box .subtitle span { color: var(--fire2); }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom: 1.1rem; position: relative; }
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+
+.form-group label .req { color: var(--fire); margin-left: 2px; }
+
+.input-wrap { position: relative; }
+
+.input-wrap .input-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="tel"] {
+  width: 100%;
+  background: var(--dark3);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.75rem 0.9rem 0.75rem 2.6rem;
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.form-group input:focus {
+  border-color: var(--fire);
+  box-shadow: 0 0 0 3px rgba(255,69,0,0.12);
+}
+
+.form-group input.error-field {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.form-group input.success-field {
+  border-color: var(--green);
+}
+
+/* Password toggle */
+.pw-toggle {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.pw-toggle:hover { color: var(--text); }
+
+/* Form row */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+/* Error / Helper text */
+.field-msg {
+  font-size: 0.75rem;
+  margin-top: 0.3rem;
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.field-msg.error { color: var(--red); display: flex; }
+.field-msg.success { color: var(--green); display: flex; }
+.field-msg.hint { color: var(--muted); display: flex; }
+
+/* Password strength */
+.pw-strength { margin-top: 0.5rem; }
+
+.pw-strength-bars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0.3rem;
+}
+
+.pw-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.pw-bar.weak { background: var(--red); }
+.pw-bar.medium { background: var(--gold); }
+.pw-bar.strong { background: var(--green); }
+
+.pw-strength-label { font-size: 0.75rem; color: var(--muted); }
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 1.2rem 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fire);
+  flex-shrink: 0;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.checkbox-group label a { color: var(--fire2); text-decoration: none; }
+.checkbox-group label a:hover { text-decoration: underline; }
+
+/* Submit Button */
+.btn-submit {
+  width: 100%;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 20px rgba(255,69,0,0.35);
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255,69,0,0.5);
+}
+
+.btn-submit:active { transform: translateY(0); }
+
+.btn-submit.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: none;
+}
+
+.btn-submit.loading .spinner { display: block; }
+.btn-submit.loading .btn-text { display: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Divider */
+.auth-divider {
+  text-align: center;
+  margin: 1.2rem 0;
+  position: relative;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 42%;
+  height: 1px;
+  background: var(--border);
+}
+
+.auth-divider::before { left: 0; }
+.auth-divider::after { right: 0; }
+
+/* Switch page link */
+.auth-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--fire2);
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-switch a:hover { text-decoration: underline; }
+
+/* ===== STEP PROGRESS (Signup) ===== */
+.step-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 2rem;
+}
+
+.step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.step-dot-circle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--dark3);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  color: var(--muted);
+  transition: all 0.3s;
+  position: relative;
+  z-index: 1;
+}
+
+.step-dot.active .step-dot-circle {
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  border-color: var(--fire);
+  color: white;
+  box-shadow: 0 0 12px rgba(255,69,0,0.5);
+}
+
+.step-dot.done .step-dot-circle {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.step-dot-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.step-dot.active .step-dot-label { color: var(--fire); }
+.step-dot.done .step-dot-label { color: var(--green); }
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin-bottom: 18px;
+  transition: background 0.3s;
+}
+
+.step-connector.done { background: var(--green); }
+
+/* Form steps */
+.form-step { display: none; }
+.form-step.active { display: block; }
+
+/* ===== BONUS BANNER ===== */
+.bonus-banner {
+  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,69,0,0.1));
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bonus-banner .bonus-icon { font-size: 1.5rem; }
+
+.bonus-banner .bonus-text { font-size: 0.85rem; line-height: 1.4; }
+.bonus-banner .bonus-text strong { color: var(--gold); }
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  background: rgba(8,10,15,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,69,0,0.25);
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 65px;
+}
+
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
+}
+
+.nav-logo span { -webkit-text-fill-color: white; }
+
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--fire); }
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-wallet {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.3);
+  padding: 0.4rem 0.9rem;
+  border-radius: 3px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.nav-avatar {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  min-width: 180px;
+  z-index: 200;
+  display: none;
+  overflow: hidden;
+}
+
+.nav-avatar:hover .nav-dropdown { display: block; }
+
+.nav-dropdown a {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.nav-dropdown a:last-child { border: none; }
+.nav-dropdown a:hover { background: rgba(255,69,0,0.08); color: var(--fire); }
+.nav-dropdown .logout-link { color: var(--red); }
+
+/* ===== DASHBOARD ===== */
+.dashboard-wrapper {
+  padding-top: 65px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* HERO */
+.db-hero {
+  background: linear-gradient(180deg, #0d0500 0%, var(--dark) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 5%;
+}
+
+.db-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.db-welcome-left h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.db-welcome-left h1 span {
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.db-welcome-left p { color: var(--muted); font-size: 0.95rem; }
+
+.db-stats-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.db-stat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  min-width: 120px;
+}
+
+.db-stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.db-stat-lbl {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.3rem;
+}
+
+/* TICKER */
+.ticker {
+  background: rgba(255,69,0,0.08);
+  border-top: 1px solid rgba(255,69,0,0.2);
+  border-bottom: 1px solid rgba(255,69,0,0.2);
+  padding: 0.55rem 0;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.ticker-track { display: inline-block; animation: tickerMove 30s linear infinite; }
+
+@keyframes tickerMove { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.ticker-item .tw { color: var(--gold); }
+.ticker-item .ta { color: var(--green); }
+
+/* SECTIONS */
+.db-section {
+  padding: 3rem 5%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.db-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.db-section-title span {
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* TOURNAMENT CARDS */
+.t-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.t-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.t-card:hover {
+  border-color: var(--fire);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,69,0,0.15);
+}
+
+.t-header {
+  height: 120px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.8rem;
+}
+
+.bg1 { background: linear-gradient(135deg, #1a0500, #4a1500, #ff4500); }
+.bg2 { background: linear-gradient(135deg, #05051a, #15154a, #4444cc); }
+.bg3 { background: linear-gradient(135deg, #051a05, #154a15, #22aa55); }
+.bg4 { background: linear-gradient(135deg, #1a0518, #4a1545, #aa44cc); }
+
+.t-badge {
+  position: absolute;
+  top: 0.8rem; left: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.bl { background: var(--green); color: #000; }
+.bu { background: var(--fire); color: white; }
+
+.t-prize {
+  position: absolute;
+  bottom: 0.8rem; right: 0.8rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 15px rgba(255,215,0,0.6);
+}
+
+.t-body { padding: 1rem; }
+
+.t-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.6rem;
+}
+
+.t-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.t-tag {
+  padding: 0.15rem 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.t-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.pbar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 0.8rem; }
+.pfill { height: 100%; background: linear-gradient(90deg, var(--fire), var(--gold)); border-radius: 2px; }
+
+.t-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+}
+
+.t-entry { font-size: 0.82rem; color: var(--muted); }
+.t-entry strong { color: var(--fire2); }
+
+.btn-join {
+  padding: 0.4rem 1.2rem;
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  color: white;
+  border: none;
+  border-radius: 2px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-join:hover { box-shadow: 0 0 12px rgba(255,69,0,0.5); transform: translateY(-1px); }
+
+/* WALLET CARD */
+.wallet-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.wallet-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.wallet-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+}
+
+.wallet-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+.wallet-bal {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--gold);
+  margin: 0.7rem 0;
+  line-height: 1;
+}
+
+.wallet-btns { display: flex; gap: 0.75rem; margin-top: 1.2rem; }
+
+.wbtn {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 3px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.wbtn-deposit { background: linear-gradient(135deg, var(--fire), var(--fire2)); color: white; border: none; }
+.wbtn-withdraw { background: transparent; border: 1px solid var(--green); color: var(--green); }
+.wbtn:hover { transform: translateY(-1px); }
+
+.tx-list { margin-top: 1.2rem; }
+
+.tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.tx-item:last-child { border: none; }
+.tx-lbl { font-size: 0.88rem; color: var(--text); }
+.tx-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+.tx-pos { color: var(--green); font-weight: 700; font-size: 0.9rem; }
+.tx-neg { color: var(--fire); font-weight: 700; font-size: 0.9rem; }
+
+.profile-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+}
+
+.profile-avatar-big {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.profile-name { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.25rem; }
+.profile-email { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.2rem; }
+
+.profile-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.88rem;
+}
+
+.profile-stat:last-child { border: none; }
+.profile-stat .psl { color: var(--muted); }
+.profile-stat .psv { color: white; font-weight: 600; }
+
+/* LEADERBOARD */
+.lb-table { width: 100%; border-collapse: collapse; }
+
+.lb-table th {
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-row { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+.lb-row:hover { background: rgba(255,69,0,0.04); }
+
+.lb-row td { padding: 0.8rem 0.8rem; font-size: 0.9rem; }
+
+.lb-rank { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.85rem; }
+.r1 { color: var(--gold); } .r2 { color: #C0C0C0; } .r3 { color: #CD7F32; } .ro { color: var(--muted); }
+
+.lb-player { display: flex; align-items: center; gap: 0.7rem; }
+.lp-av { width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+.lp-name { font-weight: 600; color: white; font-size: 0.9rem; }
+.lp-id { font-size: 0.72rem; color: var(--muted); }
+.lb-prize { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--gold); font-size: 0.85rem; }
+.lb-kills { font-weight: 700; color: var(--fire2); }
+.lb-wins { color: var(--green); font-weight: 600; }
+
+/* FOOTER */
+.db-footer {
+  background: var(--dark2);
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 5%;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  min-width: 300px;
+  max-width: 360px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  z-index: 9999;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.toast.show { transform: translateX(0); }
+.toast.t-success { border-left: 4px solid var(--green); }
+.toast.t-error { border-left: 4px solid var(--red); }
+.toast.t-info { border-left: 4px solid var(--fire); }
+
+.toast-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.3; }
+.toast-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.toast-msg { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--fire);
+  border-radius: 6px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 440px;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.3s;
+  position: relative;
+}
+
+.modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+.modal h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: none;
+  color: var(--muted); font-size: 1.3rem;
+  cursor: pointer; line-height: 1;
+}
+
+.modal-close:hover { color: white; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .auth-left { display: none; }
+  .auth-right { width: 100%; }
+  .wallet-grid { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+
+@media (max-width: 600px) {
+  .auth-right { padding: 1.5rem; }
+  .form-row { grid-template-columns: 1fr; }
+  .db-stats-row { gap: 0.75rem; }
+  .db-stat { min-width: 90px; padding: 0.75rem 1rem; }
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in { animation: fadeUp 0.5s ease forwards; }
+
+.fade-in-d1 { animation: fadeUp 0.5s ease 0.1s both; }
+.fade-in-d2 { animation: fadeUp 0.5s ease 0.2s both; }
+.fade-in-d3 { animation: fadeUp 0.5s ease 0.3s both; }
+
+/* ===== ADMIN PANEL ===== */
+.admin-wrapper {
+  min-height: 100vh;
+  display: flex;
+  background: var(--dark);
+}
+
+.admin-sidebar {
+  width: 240px;
+  background: var(--dark2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 50;
+}
+
+.admin-logo {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, var(--fire), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.admin-logo span { -webkit-text-fill-color: white; font-size: 0.7rem; display: block; margin-top: -4px; letter-spacing: 1px; color: var(--muted); }
+
+.admin-nav { flex: 1; padding: 1rem 0; }
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  text-decoration: none;
+}
+
+.admin-nav-item:hover, .admin-nav-item.active {
+  color: var(--text);
+  background: rgba(255,69,0,0.07);
+  border-left-color: var(--fire);
+}
+
+.admin-nav-item .ani { font-size: 1rem; }
+
+.admin-nav-section {
+  padding: 0.5rem 1.5rem 0.25rem;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--border);
+  margin-top: 0.5rem;
+}
+
+.admin-sidebar-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.admin-sidebar-footer .admin-user { color: var(--text); font-weight: 600; margin-bottom: 0.3rem; }
+
+.admin-content {
+  margin-left: 240px;
+  flex: 1;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-topbar h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: white;
+}
+
+.admin-topbar p { color: var(--muted); font-size: 0.9rem; margin-top: 0.2rem; }
+
+/* Admin Stats Grid */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.admin-stat-card:hover { border-color: var(--fire); }
+
+.admin-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.asc-fire::before { background: linear-gradient(90deg, var(--fire), var(--fire2)); }
+.asc-gold::before { background: linear-gradient(90deg, var(--gold), #ffa500); }
+.asc-green::before { background: linear-gradient(90deg, var(--green), #059669); }
+.asc-cyan::before { background: linear-gradient(90deg, var(--cyan), #0891b2); }
+
+.asc-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.asc-val { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: white; line-height: 1; }
+.asc-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.3rem; }
+
+/* Admin Section */
+.admin-section { margin-bottom: 2.5rem; }
+
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1.5px;
+  color: white;
+}
+
+/* Search + Filter bar */
+.admin-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-search {
+  flex: 1;
+  min-width: 200px;
+  background: var(--dark3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.6rem 0.9rem 0.6rem 2.4rem;
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.75rem center;
+  transition: border-color 0.2s;
+}
+
+.admin-search:focus { border-color: var(--fire); }
+
+.admin-filter-select {
+  background: var(--dark3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.6rem 0.9rem;
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Users Table */
+.admin-table-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--dark2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.admin-table th:first-child { padding-left: 1.2rem; }
+
+.admin-tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+
+.admin-tr:hover { background: rgba(255,255,255,0.025); }
+.admin-tr:last-child { border: none; }
+
+.admin-table td {
+  padding: 0.8rem 1rem;
+  font-size: 0.88rem;
+  vertical-align: middle;
+}
+
+.admin-table td:first-child { padding-left: 1.2rem; }
+
+.user-cell { display: flex; align-items: center; gap: 0.7rem; }
+.user-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--fire), var(--fire2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: white; flex-shrink: 0; }
+.user-nm { font-weight: 600; color: white; font-size: 0.9rem; }
+.user-id { font-size: 0.72rem; color: var(--muted); font-family: 'Orbitron', sans-serif; }
+
+.badge-role-admin { background: rgba(255,69,0,0.15); color: var(--fire); border: 1px solid rgba(255,69,0,0.3); padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+.badge-role-user { background: rgba(6,182,212,0.1); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+.badge-active { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; font-weight: 700; }
+.badge-banned { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; font-weight: 700; }
+
+.action-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.abtn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 3px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.abtn-view { background: rgba(6,182,212,0.12); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+.abtn-wallet { background: rgba(255,215,0,0.1); color: var(--gold); border: 1px solid rgba(255,215,0,0.25); }
+.abtn-ban { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+.abtn-unban { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+.abtn-delete { background: rgba(239,68,68,0.15); color: #ff6b6b; border: 1px solid rgba(239,68,68,0.3); }
+.abtn:hover { filter: brightness(1.3); transform: translateY(-1px); }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.empty-state .es-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-btns { display: flex; gap: 0.4rem; }
+.pbtn {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--dark3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.pbtn.active { background: var(--fire); border-color: var(--fire); color: white; }
+.pbtn:hover:not(.active) { border-color: var(--fire); color: var(--fire); }
+
+/* Admin modals */
+.admin-modal-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+/* Confirm dialog */
+.confirm-box {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+.confirm-box .ci { font-size: 3rem; margin-bottom: 0.75rem; }
+.confirm-box h4 { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+.confirm-box p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+.confirm-btns { display: flex; gap: 0.75rem; }
+
+@media (max-width: 768px) {
+  .admin-sidebar { display: none; }
+  .admin-content { margin-left: 0; padding: 1rem; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE 1: SIGNUP
+     ============================================================ -->
+<div class="page active" id="page-signup">
+  <div class="auth-wrapper">
+
+    <!-- LEFT PANEL -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <span class="auth-logo">BlazeFire Arena</span>
+        <div class="auth-logo-sub">🔥 India's #1 Free Fire Tournament</div>
+
+        <div class="auth-feature">
+          <span class="auth-feature-icon">🏆</span>
+          <div class="auth-feature-text">
+            <h4>Daily Tournaments</h4>
+            <p>Solo, Duo & Squad — har skill level ke liye tournaments available hain</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon">💰</span>
+          <div class="auth-feature-text">
+            <h4>Real Cash Prizes</h4>
+            <p>₹20 se shuru karo aur ₹1 Lakh+ tak jeetne ka mauka paao</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon">⚡</span>
+          <div class="auth-feature-text">
+            <h4>Instant Withdrawal</h4>
+            <p>Jeetne ke 5 minute ke andar seedha UPI ya bank account mein</p>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon">🛡️</span>
+          <div class="auth-feature-text">
+            <h4>Anti-Cheat System</h4>
+            <p>100% fair play guarantee — hackers aur cheaters ka koi jagah nahi</p>
+          </div>
+        </div>
+
+        <div class="auth-badge">
+          <span class="live-dot"></span>
+          24,817 Players Online
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — SIGNUP FORM -->
+    <div class="auth-right">
+      <div class="auth-form-box fade-in">
+
+        <h2>Account Banao</h2>
+        <p class="subtitle">Free account banao aur <span>tournaments mein jump karo!</span></p>
+
+        <!-- STEP PROGRESS -->
+        <div class="step-progress" id="stepProgress">
+          <div class="step-dot active" id="sdot1">
+            <div class="step-dot-circle">1</div>
+            <div class="step-dot-label">Info</div>
+          </div>
+          <div class="step-connector" id="sconn1"></div>
+          <div class="step-dot" id="sdot2">
+            <div class="step-dot-circle">2</div>
+            <div class="step-dot-label">Security</div>
+          </div>
+          <div class="step-connector" id="sconn2"></div>
+          <div class="step-dot" id="sdot3">
+            <div class="step-dot-circle">3</div>
+            <div class="step-dot-label">Done</div>
+          </div>
+        </div>
+
+        <!-- STEP 1: Basic Info -->
+        <div class="form-step active" id="step1">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username <span class="req">*</span></label>
+              <div class="input-wrap">
+                <span class="input-icon">🎮</span>
+                <input type="text" id="s-username" placeholder="coolplayer99" oninput="validateUsername(this)">
+              </div>
+              <div class="field-msg" id="msg-username"></div>
+            </div>
+            <div class="form-group">
+              <label>Mobile <span style="font-size:0.65rem;color:var(--muted)">(Optional)</span></label>
+              <div class="input-wrap">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="s-mobile" placeholder="+91 9876543210" oninput="validateMobile(this)">
+              </div>
+              <div class="field-msg" id="msg-mobile"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Email Address <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">📧</span>
+              <input type="email" id="s-email" placeholder="rahul@gmail.com" oninput="validateEmail(this)">
+            </div>
+            <div class="field-msg" id="msg-email"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Free Fire UID <span style="font-size:0.65rem;color:var(--muted)">(Baad mein bhi add kar sakte ho)</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">🔫</span>
+              <input type="text" id="s-ffuid" placeholder="123456789" oninput="validateFFUID(this)">
+            </div>
+            <div class="field-msg" id="msg-ffuid"></div>
+          </div>
+
+          <button class="btn-submit" onclick="goStep2()">
+            <span class="btn-text">Aage Bado →</span>
+            <div class="spinner"></div>
+          </button>
+        </div>
+
+        <!-- STEP 2: Security -->
+        <div class="form-step" id="step2">
+          <div class="form-group">
+            <label>Password <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="s-password" placeholder="Minimum 8 characters" oninput="checkPasswordStrength(this)">
+              <button class="pw-toggle" onclick="togglePw('s-password',this)" type="button">👁️</button>
+            </div>
+            <div class="pw-strength" id="pwStrength" style="display:none">
+              <div class="pw-strength-bars">
+                <div class="pw-bar" id="pb1"></div>
+                <div class="pw-bar" id="pb2"></div>
+                <div class="pw-bar" id="pb3"></div>
+                <div class="pw-bar" id="pb4"></div>
+              </div>
+              <div class="pw-strength-label" id="pwLabel">Password strength</div>
+            </div>
+            <div class="field-msg" id="msg-password"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Confirm Password <span class="req">*</span></label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="s-confirm" placeholder="Password dobara likho" oninput="validateConfirm(this)">
+              <button class="pw-toggle" onclick="togglePw('s-confirm',this)" type="button">👁️</button>
+            </div>
+            <div class="field-msg" id="msg-confirm"></div>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="agreeCheck">
+            <label for="agreeCheck">
+              Main agree karta/karti hoon <a href="#">Terms of Service</a> aur <a href="#">Privacy Policy</a> se. Meri age 18+ hai.
+            </label>
+          </div>
+
+          <div style="display:flex;gap:0.75rem">
+            <button class="btn-submit" style="background:var(--dark3);border:1px solid var(--border);box-shadow:none;flex:0.5" onclick="goStep1()">
+              <span class="btn-text">← Wapas</span>
+            </button>
+            <button class="btn-submit" onclick="submitSignup(this)" style="flex:1">
+              <span class="btn-text">🔥 Account Banao!</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Success -->
+        <div class="form-step" id="step3" style="text-align:center;padding:1rem 0">
+          <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
+          <h3 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:2px;margin-bottom:0.5rem;color:white">Welcome to the Arena!</h3>
+          <p style="color:var(--muted);margin-bottom:1.5rem;line-height:1.6">Account successfully ban gaya! Ab tournaments join karo aur real cash jeeto! 🎮</p>
+          <button class="btn-submit" onclick="goDashboard()">
+            <span class="btn-text">🎮 Dashboard Kholo</span>
+          </button>
+        </div>
+
+        <div id="signup-switch-link">
+          <div class="auth-divider">ya</div>
+          <div class="auth-switch">
+            Pehle se account hai? <a onclick="goPage('page-login')">Login Karo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE 2: LOGIN
+     ============================================================ -->
+<div class="page" id="page-login">
+  <div class="auth-wrapper">
+
+    <!-- LEFT PANEL -->
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <span class="auth-logo">BlazeFire Arena</span>
+        <div class="auth-logo-sub">🔥 Wapas Aao Champion!</div>
+
+        <div style="text-align:center;margin:2rem 0">
+          <div style="font-size:5rem;margin-bottom:1rem">🏆</div>
+          <h2 style="font-family:'Bebas Neue';font-size:2.5rem;letter-spacing:2px;margin-bottom:1rem">AAJ KI<br><span style="color:var(--fire)">PRIZE POOL</span></h2>
+          <div style="font-family:'Orbitron';font-size:3rem;font-weight:900;color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,0.5);margin-bottom:1.5rem">₹2,45,000</div>
+          <p style="color:var(--muted);font-size:0.9rem;line-height:1.6">Aaj 14 active tournaments chal rahe hain. Login karo aur apna slot pakdo!</p>
+        </div>
+
+        <!-- Recent winners strip -->
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:1rem;margin-top:1rem">
+          <div style="font-size:0.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.75rem">Recent Winners</div>
+          <div id="recentWinners"></div>
+        </div>
+
+        <div class="auth-badge">
+          <span class="live-dot"></span>
+          Live Tournaments Active
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — LOGIN FORM -->
+    <div class="auth-right">
+      <div class="auth-form-box fade-in">
+
+        <h2>Wapas Aao! 👊</h2>
+        <p class="subtitle">Login karo aur tournaments mein <span>jump karo!</span></p>
+
+        <div class="form-group" style="margin-top:1.5rem">
+          <label>Email Address <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input type="email" id="l-email" placeholder="rahul@gmail.com" oninput="clearLoginError()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Password <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="l-password" placeholder="••••••••" oninput="clearLoginError()" onkeydown="if(event.key==='Enter')submitLogin()">
+            <button class="pw-toggle" onclick="togglePw('l-password',this)" type="button">👁️</button>
+          </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="login-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:3px;padding:0.7rem 0.9rem;margin-bottom:1rem;font-size:0.85rem;color:#fca5a5;display:none;align-items:center;gap:0.5rem">
+          ❌ <span id="login-error-msg">Email ya password galat hai!</span>
+        </div>
+
+        <div style="text-align:right;margin-bottom:1.2rem">
+          <a href="#" style="color:var(--fire2);font-size:0.82rem;text-decoration:none" onclick="showForgotModal()">Password bhool gaye? 🔑</a>
+        </div>
+
+        <button class="btn-submit" id="loginBtn" onclick="submitLogin()">
+          <span class="btn-text">🔥 Login Karo</span>
+          <div class="spinner"></div>
+        </button>
+
+        <!-- DEMO HINT -->
+        <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:3px;padding:0.65rem 0.9rem;margin-top:1rem;font-size:0.8rem;color:var(--muted);text-align:center">
+          💡 <strong style="color:var(--gold)">Demo:</strong> Koi bhi email & password daalo ya pehle signup karo
+        </div>
+
+        <div class="auth-divider" style="margin-top:1.5rem">ya</div>
+
+        <div class="auth-switch">
+          Naya account chahiye? <a onclick="goPage('page-signup')">Free Register Karo 🎮</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE 3: DASHBOARD
+     ============================================================ -->
+<div class="page" id="page-dashboard">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-logo" onclick="goPage('page-login')">Blaze<span>Fire</span> Arena</div>
+    <ul class="nav-links">
+      <li><a href="#sec-tournaments">Tournaments</a></li>
+      <li><a href="#sec-leaderboard">Leaderboard</a></li>
+      <li><a href="#sec-wallet">Wallet</a></li>
+    </ul>
+    <div class="nav-user">
+      <div class="nav-wallet">💰 ₹<span id="nav-bal">50</span></div>
+      <div class="nav-avatar">
+        <span id="nav-av-letter">R</span>
+        <div class="nav-dropdown">
+          <a href="#">👤 Profile</a>
+          <a href="#">🎮 My Tournaments</a>
+          <a href="#">💳 Wallet</a>
+          <a href="#">⚙️ Settings</a>
+          <a class="logout-link" onclick="logout()">🚪 Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dashboard-wrapper">
+
+    <!-- HERO / WELCOME -->
+    <div class="db-hero">
+      <div class="db-welcome">
+        <div class="db-welcome-left fade-in-d1">
+          <h1>Welcome Back, <span id="db-username">Champion</span>! 🔥</h1>
+          <p>Aaj ke tournaments ready hain — apna slot pakdo aur prize jeeto!</p>
+        </div>
+        <div class="db-stats-row fade-in-d2">
+          <div class="db-stat">
+            <div class="db-stat-val" id="st-earnings">₹0</div>
+            <div class="db-stat-lbl">Total Earned</div>
+          </div>
+          <div class="db-stat">
+            <div class="db-stat-val">0</div>
+            <div class="db-stat-lbl">Tournaments</div>
+          </div>
+          <div class="db-stat">
+            <div class="db-stat-val">0</div>
+            <div class="db-stat-lbl">Wins</div>
+          </div>
+          <div class="db-stat">
+            <div class="db-stat-val" style="color:var(--cyan)">Bronze</div>
+            <div class="db-stat-lbl">Rank</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKER -->
+    <div class="ticker">
+      <div class="ticker-track" id="db-ticker"></div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="db-section" id="sec-tournaments">
+      <div class="db-section-title fade-in-d1">🏆 <span>Live Tournaments</span></div>
+      <!-- Filters -->
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.5rem">
+        <button style="padding:0.4rem 1rem;background:linear-gradient(135deg,var(--fire),var(--fire2));color:white;border:none;border-radius:2px;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onclick="filterT(this,'all')">Sab</button>
+        <button style="padding:0.4rem 1rem;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:2px;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onclick="filterT(this,'solo')">Solo</button>
+        <button style="padding:0.4rem 1rem;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:2px;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onclick="filterT(this,'duo')">Duo</button>
+        <button style="padding:0.4rem 1rem;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:2px;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onclick="filterT(this,'squad')">Squad</button>
+        <button style="padding:0.4rem 1rem;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:2px;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer" onclick="filterT(this,'free')">Free Entry</button>
+      </div>
+      <div class="t-grid" id="tGrid"></div>
+    </div>
+
+    <!-- WALLET + PROFILE -->
+    <div style="background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:3rem 5%" id="sec-wallet">
+      <div style="max-width:1200px;margin:0 auto">
+        <div class="db-section-title fade-in-d1">💳 <span>Wallet & Profile</span></div>
+        <div class="wallet-grid">
+          <div class="wallet-card">
+            <div class="wallet-label">Your Balance</div>
+            <div class="wallet-bal">₹<span id="w-bal">50</span></div>
+            <div style="font-size:0.82rem;color:var(--muted)">Winnings + Deposits</div>
+            <div class="wallet-btns">
+              <button class="wbtn wbtn-deposit" onclick="showDepositModal()">⬆ Add Money</button>
+              <button class="wbtn wbtn-withdraw" onclick="showToast('Withdraw','Withdrawal request submit ho gayi! 5 min mein aa jayega.','success')">⬇ Withdraw</button>
+            </div>
+            <div class="tx-list" id="w-txlist"></div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-avatar-big" id="p-avatar">R</div>
+            <div class="profile-name" id="p-name">rahul123</div>
+            <div class="profile-email" id="p-email">rahul@gmail.com</div>
+            <div class="profile-stat"><span class="psl">🎮 Free Fire UID</span><span class="psv" id="p-ffuid">Not linked</span></div>
+            <div class="profile-stat"><span class="psl">📅 Joined</span><span class="psv" id="p-joined">—</span></div>
+            <div class="profile-stat"><span class="psl">🏆 Tournaments</span><span class="psv">0</span></div>
+            <div class="profile-stat"><span class="psl">💀 Total Kills</span><span class="psv">0</span></div>
+            <div class="profile-stat"><span class="psl">✅ Status</span><span class="psv" style="color:var(--green)">✔ Active</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="db-section" id="sec-leaderboard">
+      <div class="db-section-title fade-in-d1">🥇 <span>Hall of Fame</span></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Kills</th>
+              <th>Wins</th>
+              <th>Earnings</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="db-footer">
+      <p>© 2025 BlazeFire Arena | Fair Play | 18+ Only | Free Fire is a trademark of Garena. We are not affiliated.</p>
+    </footer>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- DEPOSIT MODAL -->
+<div class="modal-overlay" id="depositModal" onclick="if(event.target===this)closeModal('depositModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('depositModal')">✕</button>
+    <h3>💰 Add Money</h3>
+    <div class="form-group">
+      <label>Amount (₹)</label>
+      <div class="input-wrap">
+        <span class="input-icon">₹</span>
+        <input type="text" id="dep-amount" placeholder="Minimum ₹20" style="padding-left:2.2rem">
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.2rem">
+      <button onclick="setDepAmt(50)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹50</button>
+      <button onclick="setDepAmt(100)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹100</button>
+      <button onclick="setDepAmt(500)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹500</button>
+      <button onclick="setDepAmt(1000)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹1000</button>
+    </div>
+    <div class="form-group">
+      <label>Payment Method</label>
+      <div class="input-wrap">
+        <span class="input-icon">💳</span>
+        <select id="dep-method" style="width:100%;background:var(--dark3);border:1.5px solid var(--border);border-radius:4px;padding:0.75rem 0.9rem 0.75rem 2.6rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none">
+          <option>📱 UPI (Google Pay / PhonePe / Paytm)</option>
+          <option>🏦 Net Banking</option>
+          <option>💳 Debit / Credit Card</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-submit" onclick="processDeposit()">
+      <span class="btn-text">Deposit Karo ⚡</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="forgotModal" onclick="if(event.target===this)closeModal('forgotModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('forgotModal')">✕</button>
+    <h3>🔑 Password Reset</h3>
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1.5rem;line-height:1.5">Apna registered email daalo — password reset link bhejenge!</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <span class="input-icon">📧</span>
+        <input type="email" placeholder="rahul@gmail.com">
+      </div>
+    </div>
+    <button class="btn-submit" onclick="sendReset()">
+      <span class="btn-text">Reset Link Bhejo 📨</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     PAGE 4: ADMIN PANEL
+     ============================================================ -->
+<div class="page" id="page-admin">
+  <div class="admin-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        BlazeFire
+        <span>🛡️ ADMIN PANEL</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">Main</div>
+        <a class="admin-nav-item active" onclick="showAdminTab('tab-overview',this)"><span class="ani">📊</span> Overview</a>
+        <a class="admin-nav-item" onclick="showAdminTab('tab-users',this)"><span class="ani">👥</span> Users</a>
+        <div class="admin-nav-section">Management</div>
+        <a class="admin-nav-item" onclick="showAdminTab('tab-tournaments',this)"><span class="ani">🏆</span> Tournaments</a>
+        <a class="admin-nav-item" onclick="showAdminTab('tab-transactions',this)"><span class="ani">💰</span> Transactions</a>
+        <div class="admin-nav-section">System</div>
+        <a class="admin-nav-item" onclick="adminLogout()"><span class="ani">🚪</span> Logout</a>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user" id="admin-sidebar-name">Admin</div>
+        <div id="admin-sidebar-email">admin@blazefire.com</div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-content">
+
+      <!-- TAB: OVERVIEW -->
+      <div id="tab-overview" class="admin-tab">
+        <div class="admin-topbar">
+          <div>
+            <h1>📊 Dashboard Overview</h1>
+            <p id="admin-date">Loading...</p>
+          </div>
+          <button class="btn-submit" style="width:auto;padding:0.6rem 1.5rem;font-size:0.88rem" onclick="refreshAdmin()">🔄 Refresh</button>
+        </div>
+
+        <div class="admin-stats" id="admin-stats-grid"></div>
+
+        <!-- Recent Signups -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <div class="admin-section-title">🆕 Recent Signups</div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Joined</th>
+                  <th>Wallet</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-signups-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: USERS -->
+      <div id="tab-users" class="admin-tab" style="display:none">
+        <div class="admin-topbar">
+          <div>
+            <h1>👥 User Management</h1>
+            <p>Sab registered users dekho aur manage karo</p>
+          </div>
+          <button class="btn-submit" style="width:auto;padding:0.6rem 1.5rem;font-size:0.88rem" onclick="exportUsers()">📥 Export CSV</button>
+        </div>
+
+        <div class="admin-toolbar">
+          <input class="admin-search" type="text" placeholder="Search by name, email, UID..." id="user-search" oninput="filterUsers()">
+          <select class="admin-filter-select" id="user-status-filter" onchange="filterUsers()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="banned">Banned</option>
+          </select>
+          <select class="admin-filter-select" id="user-role-filter" onchange="filterUsers()">
+            <option value="all">All Roles</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>FF UID</th>
+                <th>Wallet</th>
+                <th>Joined</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body"></tbody>
+          </table>
+          <div class="pagination">
+            <span id="users-pagination-info">Showing 0 users</span>
+            <div class="page-btns" id="users-page-btns"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: TOURNAMENTS -->
+      <div id="tab-tournaments" class="admin-tab" style="display:none">
+        <div class="admin-topbar">
+          <div><h1>🏆 Tournament Management</h1><p>Tournaments dekho aur manage karo</p></div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>Name</th><th>Type</th><th>Prize</th><th>Entry</th><th>Slots</th><th>Filled</th><th>Status</th></tr>
+            </thead>
+            <tbody id="tournaments-admin-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: TRANSACTIONS -->
+      <div id="tab-transactions" class="admin-tab" style="display:none">
+        <div class="admin-topbar">
+          <div><h1>💰 Transactions</h1><p>Sab wallet transactions</p></div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:1rem">💳</div>
+          <p>Transaction history yahan dikhega jab users deposit/withdraw karenge.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ADMIN MODALS -->
+
+<!-- View User Modal -->
+<div class="modal-overlay" id="viewUserModal" onclick="if(event.target===this)closeModal('viewUserModal')">
+  <div class="modal" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('viewUserModal')">✕</button>
+    <h3>👤 User Details</h3>
+    <div id="view-user-content" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<!-- Edit Wallet Modal -->
+<div class="modal-overlay" id="editWalletModal" onclick="if(event.target===this)closeModal('editWalletModal')">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('editWalletModal')">✕</button>
+    <h3>💰 Edit Wallet</h3>
+    <div id="edit-wallet-user-info" style="margin:1rem 0;padding:0.75rem;background:var(--dark3);border-radius:4px;font-size:0.88rem;color:var(--muted)"></div>
+    <div class="form-group">
+      <label class="admin-modal-label">New Balance (₹)</label>
+      <div class="input-wrap">
+        <span class="input-icon">₹</span>
+        <input type="number" id="new-wallet-amount" placeholder="0" min="0">
+      </div>
+    </div>
+    <input type="hidden" id="edit-wallet-uid">
+    <button class="btn-submit" onclick="saveWallet()">
+      <span class="btn-text">💾 Save Balance</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+</div>
+
+<!-- Confirm Action Modal -->
+<div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)closeModal('confirmModal')">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    <div class="confirm-box">
+      <div class="ci" id="confirm-icon">⚠️</div>
+      <h4 id="confirm-title">Are you sure?</h4>
+      <p id="confirm-msg">Yeh action undo nahi ho sakta.</p>
+      <div class="confirm-btns">
+        <button class="btn-submit" style="background:var(--dark3);border:1px solid var(--border);box-shadow:none;color:var(--muted)" onclick="closeModal('confirmModal')">
+          <span class="btn-text">Cancel</span>
+        </button>
+        <button class="btn-submit" id="confirm-action-btn" onclick="executeConfirm()">
+          <span class="btn-text" id="confirm-btn-text">Confirm</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="t-icon">✅</div>
+  <div>
+    <div class="toast-title" id="t-title">Success</div>
+    <div class="toast-msg" id="t-msg">Done!</div>
+  </div>
+</div>
+
+<script>
+/* ==========================================
+   localStorage + APP STATE
+   ========================================== */
+const LS_USERS = 'bf_users';
+const LS_SESSION = 'bf_session';
+
+function lsSaveUsers() { localStorage.setItem(LS_USERS, JSON.stringify(APP.users)); }
+function lsLoadUsers() {
+  try {
+    const r = localStorage.getItem(LS_USERS);
+    if(r) return JSON.parse(r);
+  } catch(e) {}
+  const defaults = [
+    { userId:'u001', username:'DemoPlayer', email:'demo@blazefire.com', password:'demo1234', wallet:2961, ffuid:'481928374', createdAt:'15/01/2025', role:'user', status:'active', mobile:'' },
+    { userId:'admin001', username:'Admin', email:'admin@blazefire.com', password:'Admin@123', wallet:0, ffuid:'', createdAt:'01/01/2025', role:'admin', status:'active', mobile:'' }
+  ];
+  localStorage.setItem(LS_USERS, JSON.stringify(defaults));
+  return defaults;
+}
+function lsSaveSession(uid) { localStorage.setItem(LS_SESSION, uid); }
+function lsClearSession() { localStorage.removeItem(LS_SESSION); }
+function lsGetSession() { return localStorage.getItem(LS_SESSION); }
+
+const APP = {
+  users: lsLoadUsers(),
+  currentUser: null,
+  transactions: []
+};
+
+/* ==========================================
+   ROUTER
+   ========================================== */
+function goPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ==========================================
+   SIGNUP LOGIC
+   ========================================== */
+let currentStep = 1;
+
+function validateUsername(el) {
+  const val = el.value.trim();
+  const msg = document.getElementById('msg-username');
+  el.classList.remove('error-field','success-field');
+  msg.className = 'field-msg';
+  if(!val) return;
+  if(val.length < 3) {
+    showFieldMsg('msg-username','error','⚠️ Min 3 characters chahiye');
+    el.classList.add('error-field');
+  } else if(!/^[a-zA-Z0-9_]+$/.test(val)) {
+    showFieldMsg('msg-username','error','⚠️ Only letters, numbers & underscore');
+    el.classList.add('error-field');
+  } else {
+    showFieldMsg('msg-username','success','✓ Username available!');
+    el.classList.add('success-field');
+  }
+}
+
+function validateEmail(el) {
+  const val = el.value.trim();
+  const msg = document.getElementById('msg-email');
+  el.classList.remove('error-field','success-field');
+  if(!val) return;
+  const exists = APP.users.find(u => u.email === val);
+  if(exists) {
+    showFieldMsg('msg-email','error','❌ Email already registered! Login karo.');
+    el.classList.add('error-field');
+  } else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    showFieldMsg('msg-email','error','⚠️ Valid email daalo');
+    el.classList.add('error-field');
+  } else {
+    showFieldMsg('msg-email','success','✓ Email available!');
+    el.classList.add('success-field');
+  }
+}
+
+function validateMobile(el) {
+  const val = el.value.trim().replace(/\D/g,'');
+  el.classList.remove('error-field','success-field');
+  if(!val) return;
+  if(val.length < 10) {
+    el.classList.add('error-field');
+  } else {
+    el.classList.add('success-field');
+  }
+}
+
+function validateFFUID(el) {
+  const val = el.value.trim();
+  el.classList.remove('error-field','success-field');
+  if(!val) return;
+  if(!/^\d{6,12}$/.test(val)) {
+    showFieldMsg('msg-ffuid','hint','💡 UID 6-12 digits ka hota hai');
+    el.classList.add('error-field');
+  } else {
+    showFieldMsg('msg-ffuid','success','✓ Valid UID format');
+    el.classList.add('success-field');
+  }
+}
+
+function checkPasswordStrength(el) {
+  const pw = el.value;
+  const strengthDiv = document.getElementById('pwStrength');
+  if(!pw) { strengthDiv.style.display='none'; return; }
+  strengthDiv.style.display='block';
+  let score = 0;
+  if(pw.length >= 8) score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  const bars = ['pb1','pb2','pb3','pb4'];
+  const colors = { 1:'weak', 2:'medium', 3:'medium', 4:'strong' };
+  const labels = { 1:'Weak 😕', 2:'Fair 🙂', 3:'Good 👍', 4:'Strong 💪' };
+  bars.forEach((b,i) => {
+    const el2 = document.getElementById(b);
+    el2.className = 'pw-bar';
+    if(i < score) el2.classList.add(colors[score]);
+  });
+  document.getElementById('pwLabel').textContent = labels[score] || '';
+  if(score <= 1) {
+    showFieldMsg('msg-password','error','⚠️ Weak password — uppercase & numbers add karo');
+    el.classList.add('error-field'); el.classList.remove('success-field');
+  } else if(score >= 3) {
+    showFieldMsg('msg-password','success','✓ Strong password!');
+    el.classList.remove('error-field'); el.classList.add('success-field');
+  } else {
+    document.getElementById('msg-password').className = 'field-msg';
+    el.classList.remove('error-field','success-field');
+  }
+}
+
+function validateConfirm(el) {
+  const pw = document.getElementById('s-password').value;
+  el.classList.remove('error-field','success-field');
+  if(!el.value) return;
+  if(el.value !== pw) {
+    showFieldMsg('msg-confirm','error','❌ Passwords match nahi kar rahe!');
+    el.classList.add('error-field');
+  } else {
+    showFieldMsg('msg-confirm','success','✓ Passwords match!');
+    el.classList.add('success-field');
+  }
+}
+
+function showFieldMsg(id, type, text) {
+  const el = document.getElementById(id);
+  el.className = 'field-msg ' + type;
+  el.innerHTML = text;
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  if(input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function goStep2() {
+  const username = document.getElementById('s-username').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  if(!username || username.length < 3) { showToast('Oops!','Valid username daalo (min 3 chars)','error'); return; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Oops!','Valid email address daalo','error'); return; }
+  if(APP.users.find(u=>u.email===email)) { showToast('Oops!','Yeh email already registered hai!','error'); return; }
+  setStep(2);
+}
+
+function goStep1() { setStep(1); }
+
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('active', i===n);
+    const dot = document.getElementById('sdot'+i);
+    dot.classList.remove('active','done');
+    if(i===n) dot.classList.add('active');
+    else if(i<n) dot.classList.add('done');
+  });
+  [1,2].forEach(i => {
+    const conn = document.getElementById('sconn'+i);
+    if(conn) conn.classList.toggle('done', i<n);
+  });
+  currentStep = n;
+  if(n===3) document.getElementById('signup-switch-link').style.display='none';
+}
+
+function submitSignup(btn) {
+  const pw = document.getElementById('s-password').value;
+  const confirm = document.getElementById('s-confirm').value;
+  const agreed = document.getElementById('agreeCheck').checked;
+  if(pw.length < 8) { showToast('Oops!','Password min 8 characters ka hona chahiye','error'); return; }
+  if(pw !== confirm) { showToast('Oops!','Passwords match nahi kar rahe!','error'); return; }
+  if(!agreed) { showToast('Oops!','Terms & Conditions se agree karo pehle','error'); return; }
+
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    const newUser = {
+      userId: 'u' + Date.now(),
+      username: document.getElementById('s-username').value.trim(),
+      email: document.getElementById('s-email').value.trim(),
+      password: pw,
+      wallet: 0,
+      ffuid: document.getElementById('s-ffuid').value.trim() || '',
+      createdAt: new Date().toLocaleDateString('en-IN'),
+      bonus: false
+    };
+    APP.users.push(newUser);
+    APP.currentUser = newUser;
+    lsSaveUsers();
+    lsSaveSession(newUser.userId);
+    setStep(3);
+  }, 1800);
+}
+
+function goDashboard() {
+  if(APP.currentUser) loadDashboard(APP.currentUser);
+  goPage('page-dashboard');
+}
+
+/* ==========================================
+   LOGIN LOGIC
+   ========================================== */
+function clearLoginError() {
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function submitLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pw = document.getElementById('l-password').value;
+  if(!email || !pw) { showLoginError('Email aur password dono daalo!'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.classList.add('loading');
+
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    const user = APP.users.find(u => u.email === email && u.password === pw);
+    if(user) {
+      if(user.status === 'banned') {
+        showLoginError('Tera account ban kar diya gaya hai! Admin se contact karo.');
+        return;
+      }
+      APP.currentUser = user;
+      lsSaveSession(user.userId);
+      if(user.role === 'admin') {
+        goPage('page-admin');
+        renderAdminPanel();
+        showToast('Admin Login! 🛡️', 'Welcome Admin!', 'success');
+      } else {
+        loadDashboard(user);
+        goPage('page-dashboard');
+        showToast('Welcome Back! 👊', user.username + ', glad to have you back!', 'success');
+      }
+    } else {
+      showLoginError('❌ Email ya password galat hai!');
+    }
+  }, 1500);
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.style.display = 'flex';
+  document.getElementById('login-error-msg').textContent = msg;
+}
+
+/* ==========================================
+   DASHBOARD
+   ========================================== */
+const tournaments = [
+  { id:1, name:"Booyah Battle Royale", type:"solo", prize:"₹50,000", entry:"₹49", slots:100, filled:87, bg:"bg1", badge:"LIVE", bc:"bl" },
+  { id:2, name:"Duo Domination Cup", type:"duo", prize:"₹25,000", entry:"₹39", slots:50, filled:38, bg:"bg2", badge:"UPCOMING", bc:"bu" },
+  { id:3, name:"Daily Free Entry Solo", type:"solo", prize:"₹5,000", entry:"FREE", slots:200, filled:156, bg:"bg3", badge:"LIVE", bc:"bl" },
+  { id:4, name:"Squad War Championship", type:"squad", prize:"₹1,00,000", entry:"₹99", slots:25, filled:18, bg:"bg4", badge:"UPCOMING", bc:"bu" },
+  { id:5, name:"Headshot Masters", type:"solo", prize:"₹10,000", entry:"₹19", slots:150, filled:141, bg:"bg1", badge:"LIVE", bc:"bl" },
+  { id:6, name:"Friday Night Brawl", type:"duo", prize:"₹15,000", entry:"₹29", slots:80, filled:24, bg:"bg2", badge:"UPCOMING", bc:"bu" },
+];
+
+const players = [
+  { rank:1, name:"xXSniper_KingXx", kills:1847, wins:234, earn:"₹1,24,500", color:"#FF4500" },
+  { rank:2, name:"GodLevel_Rahul", kills:1612, wins:198, earn:"₹89,200", color:"#FFD700" },
+  { rank:3, name:"ProGamer_Nitesh", kills:1489, wins:167, earn:"₹67,800", color:"#10B981" },
+  { rank:4, name:"KillStreak_Priya", kills:1254, wins:143, earn:"₹45,600", color:"#06B6D4" },
+  { rank:5, name:"AimBot_Destroyer", kills:1198, wins:129, earn:"₹38,900", color:"#A855F7" },
+  { rank:6, name:"Shadow_Warrior07", kills:1087, wins:118, earn:"₹29,400", color:"#F59E0B" },
+  { rank:7, name:"Rush_Master_Anuj", kills:986, wins:104, earn:"₹21,700", color:"#EC4899" },
+];
+
+const tickerData = [
+  {w:"xXSniper_KingXx",a:"₹5,000",t:"Solo Battle"},
+  {w:"GodLevel_Rahul",a:"₹12,000",t:"Duo Cup"},
+  {w:"ProGamer_Nitesh",a:"₹2,500",t:"Free Entry"},
+  {w:"Shadow_Warrior07",a:"₹8,000",t:"Headshot Masters"},
+  {w:"Rush_Master_Anuj",a:"₹25,000",t:"Squad War"},
+  {w:"KillStreak_Priya",a:"₹3,800",t:"Daily Challenge"},
+];
+
+function loadDashboard(user) {
+  // Navbar
+  document.getElementById('nav-av-letter').textContent = user.username[0].toUpperCase();
+  document.getElementById('nav-bal').textContent = user.wallet.toLocaleString('en-IN');
+  // Welcome
+  document.getElementById('db-username').textContent = user.username;
+  document.getElementById('st-earnings').textContent = '₹0';
+  // Wallet
+  animateBal('w-bal', user.wallet);
+  // Profile
+  document.getElementById('p-avatar').textContent = user.username[0].toUpperCase();
+  document.getElementById('p-name').textContent = user.username;
+  document.getElementById('p-email').textContent = user.email;
+  document.getElementById('p-ffuid').textContent = user.ffuid || '❌ Not linked';
+  document.getElementById('p-joined').textContent = user.createdAt;
+  // Transactions
+  const txs = [
+    { lbl:'Account Created', time:user.createdAt, amt:'—', pos:true },
+  ];
+  document.getElementById('w-txlist').innerHTML = txs.map(t=>`
+    <div class="tx-item">
+      <div><div class="tx-lbl">${t.lbl}</div><div class="tx-time">${t.time}</div></div>
+      <div class="${t.pos?'tx-pos':'tx-neg'}">${t.amt}</div>
+    </div>
+  `).join('');
+
+  renderTournaments('all');
+  renderLeaderboard();
+  renderTicker();
+  renderRecentWinners();
+}
+
+function animateBal(id, target) {
+  let curr = 0;
+  const el = document.getElementById(id);
+  const step = target / 50;
+  const iv = setInterval(() => {
+    curr = Math.min(curr+step, target);
+    el.textContent = Math.floor(curr).toLocaleString('en-IN');
+    if(curr>=target) clearInterval(iv);
+  }, 20);
+}
+
+function renderTournaments(filter) {
+  const filtered = filter==='all' ? tournaments : filter==='free' ? tournaments.filter(t=>t.entry==='FREE') : tournaments.filter(t=>t.type===filter);
+  document.getElementById('tGrid').innerHTML = filtered.map(t=>`
+    <div class="t-card">
+      <div class="t-header ${t.bg}">
+        <span class="t-badge ${t.bc}">${t.badge}</span>
+        <span class="t-prize">${t.prize}</span>
+      </div>
+      <div class="t-body">
+        <div class="t-name">${t.name}</div>
+        <div class="t-meta">
+          <span class="t-tag">🎮 ${t.type.toUpperCase()}</span>
+          <span class="t-tag">👥 ${t.slots} Slots</span>
+          <span class="t-tag">${t.badge==='LIVE'?'🔴 Live':'⏳ Soon'}</span>
+        </div>
+        <div class="t-progress-label"><span>${t.filled}/${t.slots} Players</span><span style="color:var(--fire)">${Math.round(t.filled/t.slots*100)}%</span></div>
+        <div class="pbar"><div class="pfill" style="width:${t.filled/t.slots*100}%"></div></div>
+        <div class="t-foot">
+          <div class="t-entry">Entry: <strong>${t.entry}</strong></div>
+          <button class="btn-join" onclick="joinTournament('${t.name}','${t.entry}')">Join</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterT(btn, filter) {
+  document.querySelectorAll('[onclick^="filterT"]').forEach(b=>{
+    b.style.background = 'var(--card)';
+    b.style.borderColor = 'var(--border)';
+    b.style.color = 'var(--muted)';
+  });
+  btn.style.background = 'linear-gradient(135deg,var(--fire),var(--fire2))';
+  btn.style.borderColor = 'var(--fire)';
+  btn.style.color = 'white';
+  renderTournaments(filter);
+}
+
+function joinTournament(name, fee) {
+  if(fee !== 'FREE') {
+    const amount = parseInt(fee.replace('₹',''));
+    if(APP.currentUser && APP.currentUser.wallet < amount) {
+      showToast('Wallet Low!','Pehle wallet mein money add karo 💳','error');
+      return;
+    }
+    if(APP.currentUser) APP.currentUser.wallet -= amount;
+  }
+  updateBalDisplay();
+  showToast('Joined! 🎮', `"${name}" mein entry ho gayi! GL HF 🔥`, 'success');
+}
+
+function updateBalDisplay() {
+  if(!APP.currentUser) return;
+  document.getElementById('nav-bal').textContent = APP.currentUser.wallet.toLocaleString('en-IN');
+  document.getElementById('w-bal').textContent = APP.currentUser.wallet.toLocaleString('en-IN');
+  document.getElementById('st-earnings').textContent = '₹' + APP.currentUser.wallet;
+}
+
+function renderLeaderboard() {
+  const ranks = ['r1','r2','r3','ro','ro','ro','ro'];
+  const icons = ['🥇','🥈','🥉'];
+  document.getElementById('lbBody').innerHTML = players.map((p,i)=>`
+    <tr class="lb-row">
+      <td><span class="lb-rank ${ranks[i]}">${i<3?icons[i]:'#'+p.rank}</span></td>
+      <td><div class="lb-player">
+        <div class="lp-av" style="background:${p.color}22;color:${p.color}">${p.name[0]}</div>
+        <div><div class="lp-name">${p.name}</div></div>
+      </div></td>
+      <td class="lb-kills">💀 ${p.kills.toLocaleString()}</td>
+      <td class="lb-wins">🏆 ${p.wins}</td>
+      <td class="lb-prize">${p.earn}</td>
+    </tr>
+  `).join('');
+}
+
+function renderTicker() {
+  const data = [...tickerData,...tickerData];
+  document.getElementById('db-ticker').innerHTML = data.map(d=>`
+    <span class="ticker-item">🔥 <span class="tw">${d.w}</span> ne <span class="ta">${d.a}</span> jeeta <span style="color:var(--muted)">${d.t} mein!</span></span>
+  `).join(' &nbsp;&nbsp; ');
+}
+
+function renderRecentWinners() {
+  const el = document.getElementById('recentWinners');
+  if(!el) return;
+  el.innerHTML = tickerData.slice(0,4).map(d=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem">
+      <span style="color:var(--text)">${d.w}</span>
+      <span style="color:var(--green);font-weight:700">${d.a}</span>
+    </div>
+  `).join('');
+}
+
+/* ==========================================
+   MODALS
+   ========================================== */
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function showDepositModal() { openModal('depositModal'); }
+function showForgotModal() { openModal('forgotModal'); }
+
+function setDepAmt(a) { document.getElementById('dep-amount').value = a; }
+
+function processDeposit() {
+  const amt = parseInt(document.getElementById('dep-amount').value);
+  if(!amt || amt < 20) { showToast('Error','Minimum ₹20 deposit karo','error'); return; }
+  const btn = event.target.closest('button');
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    if(APP.currentUser) {
+      APP.currentUser.wallet += amt;
+      syncUserToStorage();
+    }
+    updateBalDisplay();
+    closeModal('depositModal');
+    showToast('Deposited! 💰', `₹${amt} wallet mein add ho gaya!`, 'success');
+  }, 1500);
+}
+
+function sendReset() {
+  const btn = event.target.closest('button');
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    closeModal('forgotModal');
+    showToast('Email Sent! 📨','Password reset link bhej diya!','success');
+  }, 1500);
+}
+
+/* ==========================================
+   LOGOUT
+   ========================================== */
+function logout() {
+  APP.currentUser = null;
+  lsClearSession();
+  goPage('page-login');
+  showToast('Logged Out','Fir milenge, champion! 👋','info');
+}
+
+/* ==========================================
+   TOAST
+   ========================================== */
+let toastTimer;
+function showToast(title, msg, type='info') {
+  const icons = { success:'✅', error:'❌', info:'🔥' };
+  const toast = document.getElementById('toast');
+  toast.className = 'toast t-'+type;
+  document.getElementById('t-icon').textContent = icons[type]||'🔥';
+  document.getElementById('t-title').textContent = title;
+  document.getElementById('t-msg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 3800);
+}
+
+/* ==========================================
+   INIT
+   ========================================== */
+renderRecentWinners();
+
+
+/* ==========================================
+   ADMIN PANEL JAVASCRIPT
+   ========================================== */
+
+let adminConfirmCallback = null;
+let adminCurrentPage = 1;
+const ADMIN_PAGE_SIZE = 8;
+
+function adminLogout() {
+  APP.currentUser = null;
+  lsClearSession();
+  goPage('page-login');
+  showToast('Admin Logout','See you later! 👋','info');
+}
+
+function showAdminTab(tabId, navItem) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+  document.querySelectorAll('.admin-nav-item').forEach(n => n.classList.remove('active'));
+  if(navItem) navItem.classList.add('active');
+  // Refresh tab content
+  if(tabId === 'tab-users') renderUsersTable(1);
+  if(tabId === 'tab-tournaments') renderTournamentsAdmin();
+}
+
+function renderAdminPanel() {
+  if(!APP.currentUser) return;
+  document.getElementById('admin-sidebar-name').textContent = APP.currentUser.username;
+  document.getElementById('admin-sidebar-email').textContent = APP.currentUser.email;
+  document.getElementById('admin-date').textContent = new Date().toLocaleString('en-IN');
+  renderAdminStats();
+  renderRecentSignups();
+}
+
+function refreshAdmin() {
+  APP.users = lsLoadUsers();
+  renderAdminPanel();
+  showToast('Refreshed!','Data reload ho gaya ✅','success');
+}
+
+function renderAdminStats() {
+  const users = APP.users.filter(u => u.role !== 'admin');
+  const banned = users.filter(u => u.status === 'banned').length;
+  const totalWallet = users.reduce((s, u) => s + (u.wallet || 0), 0);
+
+  const stats = [
+    { icon:'👥', val: users.length, lbl:'Total Users', cls:'asc-fire' },
+    { icon:'✅', val: users.length - banned, lbl:'Active Users', cls:'asc-green' },
+    { icon:'🚫', val: banned, lbl:'Banned Users', cls:'asc-cyan' },
+    { icon:'💰', val: '₹' + totalWallet.toLocaleString('en-IN'), lbl:'Total Wallet Balance', cls:'asc-gold' },
+  ];
+
+  document.getElementById('admin-stats-grid').innerHTML = stats.map(s => `
+    <div class="admin-stat-card ${s.cls}">
+      <div class="asc-icon">${s.icon}</div>
+      <div class="asc-val">${s.val}</div>
+      <div class="asc-lbl">${s.lbl}</div>
+    </div>
+  `).join('');
+}
+
+function renderRecentSignups() {
+  const users = APP.users.filter(u => u.role !== 'admin').slice(-5).reverse();
+  document.getElementById('recent-signups-body').innerHTML = users.length ? users.map(u => `
+    <tr class="admin-tr">
+      <td><div class="user-cell">
+        <div class="user-av">${u.username[0].toUpperCase()}</div>
+        <div><div class="user-nm">${u.username}</div><div class="user-id">${u.userId}</div></div>
+      </div></td>
+      <td style="color:var(--muted);font-size:0.85rem">${u.email}</td>
+      <td style="color:var(--muted);font-size:0.85rem">${u.createdAt}</td>
+      <td style="font-family:'Orbitron';font-size:0.82rem;color:var(--gold)">₹${(u.wallet||0).toLocaleString('en-IN')}</td>
+      <td><span class="${u.status==='banned'?'badge-banned':'badge-active'}">${u.status||'active'}</span></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="es-icon">👤</div>Koi user registered nahi hai abhi.</div></td></tr>`;
+}
+
+function renderUsersTable(page) {
+  adminCurrentPage = page || 1;
+  const q = (document.getElementById('user-search')?.value || '').toLowerCase();
+  const sf = document.getElementById('user-status-filter')?.value || 'all';
+  const rf = document.getElementById('user-role-filter')?.value || 'all';
+
+  let filtered = APP.users.filter(u => {
+    const matchQ = !q || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.ffuid||'').includes(q);
+    const matchS = sf === 'all' || (u.status||'active') === sf;
+    const matchR = rf === 'all' || (u.role||'user') === rf;
+    return matchQ && matchS && matchR;
+  });
+
+  const total = filtered.length;
+  const pages = Math.ceil(total / ADMIN_PAGE_SIZE);
+  const start = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
+  const slice = filtered.slice(start, start + ADMIN_PAGE_SIZE);
+
+  const tbody = document.getElementById('users-table-body');
+  tbody.innerHTML = slice.length ? slice.map((u, i) => `
+    <tr class="admin-tr">
+      <td style="color:var(--muted);font-size:0.82rem">${start+i+1}</td>
+      <td><div class="user-cell">
+        <div class="user-av" style="${u.status==='banned'?'background:#7f1d1d':''}">${u.username[0].toUpperCase()}</div>
+        <div><div class="user-nm">${u.username}</div><div class="user-id">${u.userId}</div></div>
+      </div></td>
+      <td style="font-size:0.85rem;color:var(--muted)">${u.email}</td>
+      <td style="font-size:0.85rem;color:var(--muted)">${u.mobile||'—'}</td>
+      <td style="font-size:0.82rem;color:var(--cyan);font-family:'Orbitron'">${u.ffuid||'—'}</td>
+      <td style="font-family:'Orbitron';font-size:0.82rem;color:var(--gold)">₹${(u.wallet||0).toLocaleString('en-IN')}</td>
+      <td style="font-size:0.82rem;color:var(--muted)">${u.createdAt}</td>
+      <td><span class="${u.role==='admin'?'badge-role-admin':'badge-role-user'}">${u.role||'user'}</span></td>
+      <td><span class="${(u.status||'active')==='banned'?'badge-banned':'badge-active'}">${u.status||'active'}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="abtn abtn-view" onclick="viewUser('${u.userId}')">👁️ View</button>
+          <button class="abtn abtn-wallet" onclick="editWallet('${u.userId}')">💰 Wallet</button>
+          ${(u.status||'active')==='banned'
+            ? `<button class="abtn abtn-unban" onclick="showConfirm('unban','${u.userId}')">✅ Unban</button>`
+            : `<button class="abtn abtn-ban" onclick="showConfirm('ban','${u.userId}')">🚫 Ban</button>`
+          }
+          ${u.role !== 'admin' ? `<button class="abtn abtn-delete" onclick="showConfirm('delete','${u.userId}')">🗑️ Delete</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="10"><div class="empty-state"><div class="es-icon">🔍</div>Koi user nahi mila!</div></td></tr>`;
+
+  // Pagination
+  document.getElementById('users-pagination-info').textContent = `Showing ${start+1}–${Math.min(start+ADMIN_PAGE_SIZE, total)} of ${total} users`;
+  const pBtns = document.getElementById('users-page-btns');
+  pBtns.innerHTML = Array.from({length: pages}, (_,i) => `
+    <button class="pbtn ${i+1===adminCurrentPage?'active':''}" onclick="renderUsersTable(${i+1})">${i+1}</button>
+  `).join('');
+}
+
+function filterUsers() { renderUsersTable(1); }
+
+function viewUser(uid) {
+  const u = APP.users.find(x => x.userId === uid);
+  if(!u) return;
+  document.getElementById('view-user-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border)">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--fire),var(--fire2));display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:white">${u.username[0].toUpperCase()}</div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:700;color:white">${u.username}</div>
+        <div style="font-size:0.82rem;color:var(--muted)">${u.email}</div>
+        <span class="${u.role==='admin'?'badge-role-admin':'badge-role-user'}" style="margin-top:0.3rem;display:inline-block">${u.role||'user'}</span>
+        <span class="${(u.status||'active')==='banned'?'badge-banned':'badge-active'}" style="margin-top:0.3rem;display:inline-block;margin-left:0.4rem">${u.status||'active'}</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+      ${[
+        ['🪪 User ID', u.userId],
+        ['📧 Email', u.email],
+        ['📱 Mobile', u.mobile||'Not set'],
+        ['🔫 FF UID', u.ffuid||'Not linked'],
+        ['💰 Wallet', '₹'+(u.wallet||0).toLocaleString('en-IN')],
+        ['📅 Joined', u.createdAt],
+      ].map(([k,v]) => `
+        <div style="background:var(--dark3);border-radius:3px;padding:0.65rem 0.8rem">
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.2rem">${k}</div>
+          <div style="font-size:0.9rem;color:white;font-weight:600;word-break:break-all">${v}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  openModal('viewUserModal');
+}
+
+function editWallet(uid) {
+  const u = APP.users.find(x => x.userId === uid);
+  if(!u) return;
+  document.getElementById('edit-wallet-uid').value = uid;
+  document.getElementById('new-wallet-amount').value = u.wallet || 0;
+  document.getElementById('edit-wallet-user-info').innerHTML = `👤 <strong style="color:white">${u.username}</strong> &nbsp;|&nbsp; Current Balance: <strong style="color:var(--gold)">₹${(u.wallet||0).toLocaleString('en-IN')}</strong>`;
+  openModal('editWalletModal');
+}
+
+function saveWallet() {
+  const uid = document.getElementById('edit-wallet-uid').value;
+  const amt = parseInt(document.getElementById('new-wallet-amount').value) || 0;
+  const btn = event.target.closest('button');
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    const idx = APP.users.findIndex(u => u.userId === uid);
+    if(idx !== -1) {
+      APP.users[idx].wallet = amt;
+      lsSaveUsers();
+      if(APP.currentUser && APP.currentUser.userId === uid) APP.currentUser.wallet = amt;
+    }
+    closeModal('editWalletModal');
+    renderAdminStats();
+    renderUsersTable(adminCurrentPage);
+    showToast('Wallet Updated! 💰', `Balance set to ₹${amt.toLocaleString('en-IN')}`, 'success');
+  }, 800);
+}
+
+let confirmAction = null;
+let confirmTargetId = null;
+
+function showConfirm(action, uid) {
+  confirmAction = action;
+  confirmTargetId = uid;
+  const u = APP.users.find(x => x.userId === uid);
+  const configs = {
+    ban:    { icon:'🚫', title:`Ban "${u?.username}"?`, msg:`Is user ka access block ho jaayega. Woh login nahi kar payega.`, btnCls:'btn-submit', btnTxt:'🚫 Ban Karo' },
+    unban:  { icon:'✅', title:`Unban "${u?.username}"?`, msg:`Is user ka access wapas restore ho jaayega.`, btnCls:'btn-submit', btnTxt:'✅ Unban Karo' },
+    delete: { icon:'🗑️', title:`Delete "${u?.username}"?`, msg:`Yeh user permanently delete ho jaayega. Yeh undo nahi ho sakta!`, btnCls:'btn-submit', btnTxt:'🗑️ Delete Karo' },
+  };
+  const c = configs[action];
+  document.getElementById('confirm-icon').textContent = c.icon;
+  document.getElementById('confirm-title').textContent = c.title;
+  document.getElementById('confirm-msg').textContent = c.msg;
+  document.getElementById('confirm-btn-text').textContent = c.btnTxt;
+  document.getElementById('confirm-action-btn').style.background = action === 'delete' ? 'linear-gradient(135deg,#dc2626,#b91c1c)' : action === 'ban' ? 'linear-gradient(135deg,#dc2626,#b91c1c)' : 'linear-gradient(135deg,var(--green),#059669)';
+  openModal('confirmModal');
+}
+
+function executeConfirm() {
+  const btn = document.getElementById('confirm-action-btn');
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    const idx = APP.users.findIndex(u => u.userId === confirmTargetId);
+    if(idx !== -1) {
+      if(confirmAction === 'ban') { APP.users[idx].status = 'banned'; showToast('User Banned 🚫', 'User ko ban kar diya gaya.', 'info'); }
+      else if(confirmAction === 'unban') { APP.users[idx].status = 'active'; showToast('User Unbanned ✅', 'User ka access restore ho gaya.', 'success'); }
+      else if(confirmAction === 'delete') { APP.users.splice(idx, 1); showToast('User Deleted 🗑️', 'User permanently delete ho gaya.', 'info'); }
+      lsSaveUsers();
+    }
+    closeModal('confirmModal');
+    renderAdminStats();
+    renderUsersTable(adminCurrentPage);
+    renderRecentSignups();
+  }, 700);
+}
+
+function renderTournamentsAdmin() {
+  const tList = [
+    { name:"Booyah Battle Royale", type:"Solo", prize:"₹50,000", entry:"₹49", slots:100, filled:87, badge:"LIVE" },
+    { name:"Duo Domination Cup", type:"Duo", prize:"₹25,000", entry:"₹39", slots:50, filled:38, badge:"UPCOMING" },
+    { name:"Daily Free Entry Solo", type:"Solo", prize:"₹5,000", entry:"FREE", slots:200, filled:156, badge:"LIVE" },
+    { name:"Squad War Championship", type:"Squad", prize:"₹1,00,000", entry:"₹99", slots:25, filled:18, badge:"UPCOMING" },
+  ];
+  document.getElementById('tournaments-admin-body').innerHTML = tList.map(t => `
+    <tr class="admin-tr">
+      <td style="color:white;font-weight:600">${t.name}</td>
+      <td><span class="badge-role-user">${t.type}</span></td>
+      <td style="font-family:'Orbitron';font-size:0.82rem;color:var(--gold)">${t.prize}</td>
+      <td style="color:var(--fire2);font-weight:600">${t.entry}</td>
+      <td style="color:var(--muted)">${t.slots}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${Math.round(t.filled/t.slots*100)}%;background:linear-gradient(90deg,var(--fire),var(--gold));border-radius:2px"></div>
+          </div>
+          <span style="font-size:0.78rem;color:var(--muted)">${t.filled}/${t.slots}</span>
+        </div>
+      </td>
+      <td><span class="${t.badge==='LIVE'?'badge-active':'badge-role-user'}">${t.badge}</span></td>
+    </tr>
+  `).join('');
+}
+
+function exportUsers() {
+  const users = APP.users.filter(u => u.role !== 'admin');
+  const csv = ['Username,Email,Mobile,FF UID,Wallet,Joined,Status,Role',
+    ...users.map(u => `${u.username},${u.email},${u.mobile||''},${u.ffuid||''},${u.wallet||0},${u.createdAt},${u.status||'active'},${u.role||'user'}`)
+  ].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'blazefire_users.csv';
+  a.click();
+  showToast('Exported! 📥', 'Users CSV download ho gaya.', 'success');
+}
+
+/* ==========================================
+   SESSION RESTORE ON PAGE LOAD
+   ========================================== */
+function syncUserToStorage() {
+  const idx = APP.users.findIndex(u => u.userId === APP.currentUser.userId);
+  if(idx !== -1) { APP.users[idx] = APP.currentUser; lsSaveUsers(); }
+}
+
+(function initSession() {
+  const sid = lsGetSession();
+  if(sid) {
+    const user = APP.users.find(u => u.userId === sid);
+    if(user && user.status !== 'banned') {
+      APP.currentUser = user;
+      if(user.role === 'admin') {
+        goPage('page-admin');
+        renderAdminPanel();
+      } else {
+        loadDashboard(user);
+        goPage('page-dashboard');
+      }
+    }
+  }
+})();
+</script>
+</body>
+</html>
