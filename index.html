@@ -3175,6 +3175,7 @@ let adminCurrentPage = 1;
 const ADMIN_PAGE_SIZE = 8;
 
 function adminLogout() {
+  if(_adminAutoRefresh) clearInterval(_adminAutoRefresh);
   APP.currentUser = null;
   lsClearSession();
   goPage('page-login');
@@ -3192,22 +3193,51 @@ function showAdminTab(tabId, navItem) {
   if(tabId === 'tab-transactions') renderDepositRequests();
 }
 
+let _adminAutoRefresh = null;
+
 function renderAdminPanel() {
   if(!APP.currentUser) return;
+  APP.users    = lsLoadUsers();
+  APP.deposits = lsLoadDeposits();
   document.getElementById('admin-sidebar-name').textContent = APP.currentUser.username;
   document.getElementById('admin-sidebar-email').textContent = APP.currentUser.email;
   document.getElementById('admin-date').textContent = new Date().toLocaleString('en-IN');
   renderAdminStats();
   renderRecentSignups();
+
+  // Auto-refresh every 15 seconds — new deposits/users automatically dikhenge
+  if(_adminAutoRefresh) clearInterval(_adminAutoRefresh);
+  _adminAutoRefresh = setInterval(() => {
+    const oldDepCount = (APP.deposits||[]).filter(d=>d.status==='pending').length;
+    const oldUserCount = (APP.users||[]).filter(u=>u.role!=='admin').length;
+    APP.users    = lsLoadUsers();
+    APP.deposits = lsLoadDeposits();
+    const newDepCount  = (APP.deposits||[]).filter(d=>d.status==='pending').length;
+    const newUserCount = (APP.users||[]).filter(u=>u.role!=='admin').length;
+    renderAdminStats();
+    renderRecentSignups();
+    document.getElementById('admin-date').textContent = new Date().toLocaleString('en-IN');
+    // Alert admin if new deposit came
+    if(newDepCount > oldDepCount) {
+      showToast('🔔 Naya Deposit Request!', (newDepCount - oldDepCount) + ' nayi deposit request aayi!', 'info');
+    }
+    if(newUserCount > oldUserCount) {
+      showToast('👤 Naya User!', (newUserCount - oldUserCount) + ' naya user register hua!', 'success');
+    }
+  }, 15000);
 }
 
 function refreshAdmin() {
-  APP.users = lsLoadUsers();
+  APP.users    = lsLoadUsers();
+  APP.deposits = lsLoadDeposits();
+  APP.transactions = lsLoadTransactions();
   renderAdminPanel();
   showToast('Refreshed!','Data reload ho gaya ✅','success');
 }
 
 function renderAdminStats() {
+  APP.users = lsLoadUsers();   // always fresh from localStorage
+  APP.deposits = lsLoadDeposits();
   const users = APP.users.filter(u => u.role !== 'admin');
   const banned = users.filter(u => u.status === 'banned').length;
   const totalWallet = users.reduce((s, u) => s + (u.wallet || 0), 0);
@@ -3230,6 +3260,7 @@ function renderAdminStats() {
 }
 
 function renderRecentSignups() {
+  APP.users = lsLoadUsers();
   const users = APP.users.filter(u => u.role !== 'admin').slice(-5).reverse();
   document.getElementById('recent-signups-body').innerHTML = users.length ? users.map(u => `
     <tr class="admin-tr">
@@ -3246,6 +3277,7 @@ function renderRecentSignups() {
 }
 
 function renderUsersTable(page) {
+  APP.users = lsLoadUsers();
   adminCurrentPage = page || 1;
   const q = (document.getElementById('user-search')?.value || '').toLowerCase();
   const sf = document.getElementById('user-status-filter')?.value || 'all';
@@ -3532,6 +3564,7 @@ function toggleTStatus(tid) {
 
 function renderDepositRequests() {
   APP.deposits = lsLoadDeposits();
+  APP.users    = lsLoadUsers();
   const filter = document.getElementById('dep-filter')?.value || 'all';
   const list = filter === 'all' ? APP.deposits : APP.deposits.filter(d=>d.status===filter);
   const allD = APP.deposits;
