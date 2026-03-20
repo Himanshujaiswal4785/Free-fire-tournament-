@@ -23,7 +23,8 @@
   --red: #EF4444;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+button, a[onclick], div[onclick] { cursor: pointer; touch-action: manipulation; }
 
 body {
   background: var(--dark);
@@ -575,28 +576,34 @@ body::before {
 }
 
 .nav-dropdown {
-  position: absolute;
-  top: 110%;
-  right: 0;
+  position: fixed;
+  top: 65px;
+  right: 1rem;
   background: var(--card);
   border: 1px solid var(--border);
+  border-top: 2px solid var(--fire);
   border-radius: 4px;
-  min-width: 180px;
-  z-index: 200;
+  min-width: 200px;
+  z-index: 9998;
   display: none;
   overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
-.nav-avatar:hover .nav-dropdown { display: block; }
+.nav-avatar .nav-dropdown { display: none; }
+.nav-avatar .nav-dropdown.open { display: block; }
 
 .nav-dropdown a {
   display: block;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  padding: 1rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255,69,0,0.2);
 }
 
 .nav-dropdown a:last-child { border: none; }
@@ -878,12 +885,13 @@ body::before {
 .wallet-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
 
 .wallet-bal {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 2.5rem;
   font-weight: 900;
   color: var(--gold);
   margin: 0.7rem 0;
   line-height: 1;
+  letter-spacing: 1px;
 }
 
 .wallet-btns { display: flex; gap: 0.75rem; margin-top: 1.2rem; }
@@ -1437,6 +1445,15 @@ body::before {
   .admin-content { margin-left: 0; padding: 1rem; }
 }
 
+
+@media (max-width: 600px) {
+  .btn-join { padding: 0.6rem 1.2rem !important; font-size: 0.9rem !important; }
+  .wbtn { padding: 0.85rem !important; font-size: 0.95rem !important; }
+  .filter-btn, [onclick^="filterT"] { padding: 0.6rem 1rem !important; font-size: 0.85rem !important; }
+  .db-stat-val { font-size: 1.2rem !important; font-family: 'Rajdhani', sans-serif !important; font-weight: 700 !important; }
+  .nav-wallet { font-size: 0.9rem !important; padding: 0.5rem 0.8rem !important; }
+  .t-grid { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
@@ -1731,14 +1748,15 @@ body::before {
       <li><a href="#sec-wallet">Wallet</a></li>
     </ul>
     <div class="nav-user">
-      <div class="nav-wallet">💰 ₹<span id="nav-bal">50</span></div>
-      <div class="nav-avatar">
+      <div class="nav-wallet" onclick="showDepositModal()" style="cursor:pointer" title="Add Money">₹<span id="nav-bal">0</span></div>
+      <div class="nav-avatar" onclick="toggleDropdown(event)" id="nav-avatar-btn">
         <span id="nav-av-letter">R</span>
-        <div class="nav-dropdown">
-          <a href="#">👤 Profile</a>
-          <a href="#">🎮 My Tournaments</a>
-          <a href="#">💳 Wallet</a>
-          <a href="#">⚙️ Settings</a>
+        <div class="nav-dropdown" id="nav-dropdown-menu">
+          <a onclick="scrollToSection('sec-wallet');closeDropdown()">👤 Profile</a>
+          <a onclick="scrollToSection('sec-tournaments');closeDropdown()">🎮 My Tournaments</a>
+          <a onclick="showDepositModal();closeDropdown()">💳 Add Money</a>
+          <a onclick="scrollToSection('sec-wallet');closeDropdown()">💼 Wallet</a>
+          <a onclick="openSettingsModal();closeDropdown()">⚙️ Settings</a>
           <a class="logout-link" onclick="logout()">🚪 Logout</a>
         </div>
       </div>
@@ -1804,8 +1822,8 @@ body::before {
             <div class="wallet-bal">₹<span id="w-bal">50</span></div>
             <div style="font-size:0.82rem;color:var(--muted)">Winnings + Deposits</div>
             <div class="wallet-btns">
-              <button class="wbtn wbtn-deposit" onclick="showDepositModal()">⬆ Add Money</button>
-              <button class="wbtn wbtn-withdraw" onclick="showToast('Withdraw','Withdrawal request submit ho gayi! 5 min mein aa jayega.','success')">⬇ Withdraw</button>
+              <button class="wbtn wbtn-deposit" onclick="showDepositModal()" ontouchstart="">⬆ Add Money</button>
+              <button class="wbtn wbtn-withdraw" onclick="showToast('Withdraw','Withdrawal request submit ho gayi! 5 min mein aa jayega.','success')" ontouchstart="">⬇ Withdraw</button>
             </div>
             <div class="tx-list" id="w-txlist"></div>
           </div>
@@ -2324,6 +2342,113 @@ body::before {
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeModal('settingsModal')">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+    <h3>⚙️ Settings & Profile</h3>
+
+    <!-- Profile Avatar -->
+    <div style="display:flex;align-items:center;gap:1rem;margin:1.2rem 0;padding:1rem;background:var(--dark3);border-radius:6px;border:1px solid var(--border)">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--fire),var(--fire2));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.6rem;color:white;flex-shrink:0" id="settings-avatar">R</div>
+      <div>
+        <div style="font-weight:700;color:white;font-size:1rem" id="settings-username">Username</div>
+        <div style="font-size:0.82rem;color:var(--muted)" id="settings-email">email</div>
+        <div style="margin-top:0.3rem"><span style="background:rgba(255,69,0,0.15);color:var(--fire);border:1px solid rgba(255,69,0,0.3);padding:0.15rem 0.5rem;border-radius:2px;font-size:0.72rem;font-weight:700">🎮 Player</span></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;margin-bottom:1.2rem;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+      <button onclick="switchSettingsTab('profile',this)" id="stab-profile" style="flex:1;padding:0.6rem;background:linear-gradient(135deg,var(--fire),var(--fire2));color:white;border:none;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:1px;cursor:pointer">👤 Profile</button>
+      <button onclick="switchSettingsTab('security',this)" id="stab-security" style="flex:1;padding:0.6rem;background:var(--dark3);color:var(--muted);border:none;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:1px;cursor:pointer;border-left:1px solid var(--border)">🔒 Security</button>
+      <button onclick="switchSettingsTab('ffuid',this)" id="stab-ffuid" style="flex:1;padding:0.6rem;background:var(--dark3);color:var(--muted);border:none;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:1px;cursor:pointer;border-left:1px solid var(--border)">🔫 Free Fire</button>
+    </div>
+
+    <!-- Tab: Profile -->
+    <div id="stab-content-profile">
+      <div class="form-group">
+        <label class="admin-modal-label">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="set-username" placeholder="Username">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Mobile Number</label>
+        <div class="input-wrap">
+          <span class="input-icon">📱</span>
+          <input type="tel" id="set-mobile" placeholder="+91 9876543210">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Email <span style="color:var(--muted);font-size:0.7rem">(change nahi hoga)</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" id="set-email" placeholder="Email" disabled style="opacity:0.5;cursor:not-allowed">
+        </div>
+      </div>
+      <button class="btn-submit" onclick="saveProfileSettings()">
+        <span class="btn-text">💾 Profile Save Karo</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <!-- Tab: Security -->
+    <div id="stab-content-security" style="display:none">
+      <div class="form-group">
+        <label class="admin-modal-label">Current Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="set-cur-pw" placeholder="Current password">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">New Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="set-new-pw" placeholder="Min 8 characters">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Confirm New Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="set-confirm-pw" placeholder="Dobara likho">
+        </div>
+      </div>
+      <button class="btn-submit" onclick="savePasswordSettings()">
+        <span class="btn-text">🔒 Password Change Karo</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <!-- Tab: Free Fire UID -->
+    <div id="stab-content-ffuid" style="display:none">
+      <div style="background:rgba(255,69,0,0.07);border:1px solid rgba(255,69,0,0.2);border-radius:4px;padding:0.75rem 1rem;margin-bottom:1.2rem;font-size:0.85rem;color:var(--muted);line-height:1.5">
+        🔫 Apna Free Fire UID daalo taki tournament verification ho sake. UID apne FF profile mein milega.
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Free Fire UID</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔫</span>
+          <input type="text" id="set-ffuid" placeholder="e.g. 6188627886">
+        </div>
+      </div>
+      <div style="background:var(--dark3);border:1px solid var(--border);border-radius:4px;padding:0.75rem 1rem;margin-bottom:1.2rem">
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.3rem">Current UID</div>
+        <div style="font-family:'Orbitron';font-size:0.95rem;color:var(--cyan);font-weight:700" id="set-current-uid">Not linked</div>
+      </div>
+      <button class="btn-submit" onclick="saveFFUID()">
+        <span class="btn-text">🔗 UID Link Karo</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -2870,7 +2995,6 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
 
-function showDepositModal() { openModal('depositModal'); }
 function showForgotModal() { openModal('forgotModal'); }
 
 function setDepAmt(a) { document.getElementById('dep-amount').value = a; }
@@ -3530,6 +3654,133 @@ function exportUsers() {
   showToast('Exported! 📥', 'Users CSV download ho gaya.', 'success');
 }
 
+
+
+/* ==========================================
+   NAV DROPDOWN — MOBILE FRIENDLY
+   ========================================== */
+function toggleDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('nav-dropdown-menu');
+  if(menu) menu.classList.toggle('open');
+}
+
+function closeDropdown() {
+  const menu = document.getElementById('nav-dropdown-menu');
+  if(menu) menu.classList.remove('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const avatar = document.getElementById('nav-avatar-btn');
+  if(avatar && !avatar.contains(e.target)) closeDropdown();
+});
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ==========================================
+   SETTINGS MODAL
+   ========================================== */
+function openSettingsModal() {
+  if(!APP.currentUser) return;
+  const u = APP.currentUser;
+  document.getElementById('settings-avatar').textContent   = u.username[0].toUpperCase();
+  document.getElementById('settings-username').textContent = u.username;
+  document.getElementById('settings-email').textContent    = u.email;
+  document.getElementById('set-username').value  = u.username;
+  document.getElementById('set-mobile').value    = u.mobile || '';
+  document.getElementById('set-email').value     = u.email;
+  document.getElementById('set-ffuid').value     = u.ffuid || '';
+  document.getElementById('set-current-uid').textContent = u.ffuid || 'Not linked';
+  switchSettingsTab('profile', document.getElementById('stab-profile'));
+  openModal('settingsModal');
+}
+
+function switchSettingsTab(tab, btn) {
+  ['profile','security','ffuid'].forEach(t => {
+    document.getElementById('stab-content-'+t).style.display = 'none';
+    const b = document.getElementById('stab-'+t);
+    if(b) {
+      b.style.background = 'var(--dark3)';
+      b.style.color = 'var(--muted)';
+    }
+  });
+  document.getElementById('stab-content-'+tab).style.display = 'block';
+  if(btn) {
+    btn.style.background = 'linear-gradient(135deg,var(--fire),var(--fire2))';
+    btn.style.color = 'white';
+  }
+}
+
+function saveProfileSettings() {
+  const btn = event.target.closest('button');
+  const newUsername = document.getElementById('set-username').value.trim();
+  const newMobile   = document.getElementById('set-mobile').value.trim();
+
+  if(!newUsername || newUsername.length < 3) {
+    showToast('Error','Username min 3 characters ka hona chahiye!','error'); return;
+  }
+
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    APP.currentUser.username = newUsername;
+    APP.currentUser.mobile   = newMobile;
+    syncUserToStorage();
+    // Update UI
+    document.getElementById('nav-av-letter').textContent  = newUsername[0].toUpperCase();
+    document.getElementById('db-username').textContent    = newUsername;
+    document.getElementById('p-name').textContent         = newUsername;
+    document.getElementById('settings-avatar').textContent   = newUsername[0].toUpperCase();
+    document.getElementById('settings-username').textContent = newUsername;
+    showToast('Saved! ✅','Profile update ho gaya!','success');
+  }, 800);
+}
+
+function savePasswordSettings() {
+  const btn    = event.target.closest('button');
+  const curPw  = document.getElementById('set-cur-pw').value;
+  const newPw  = document.getElementById('set-new-pw').value;
+  const confPw = document.getElementById('set-confirm-pw').value;
+
+  if(!curPw) { showToast('Error','Current password daalo!','error'); return; }
+  if(curPw !== APP.currentUser.password) {
+    showToast('Error','Current password galat hai!','error'); return;
+  }
+  if(newPw.length < 8) { showToast('Error','New password min 8 characters!','error'); return; }
+  if(newPw !== confPw)  { showToast('Error','Passwords match nahi kar rahe!','error'); return; }
+
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    APP.currentUser.password = newPw;
+    syncUserToStorage();
+    document.getElementById('set-cur-pw').value  = '';
+    document.getElementById('set-new-pw').value  = '';
+    document.getElementById('set-confirm-pw').value = '';
+    showToast('Password Changed! 🔒','Password successfully update ho gaya!','success');
+  }, 800);
+}
+
+function saveFFUID() {
+  const btn  = event.target.closest('button');
+  const uid  = document.getElementById('set-ffuid').value.trim();
+  if(!uid || !/^\d{6,12}$/.test(uid)) {
+    showToast('Error','Valid Free Fire UID daalo (6-12 digits)!','error'); return;
+  }
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    APP.currentUser.ffuid = uid;
+    syncUserToStorage();
+    document.getElementById('set-current-uid').textContent = uid;
+    document.getElementById('p-ffuid').textContent = uid;
+    showToast('UID Linked! 🔫','Free Fire UID successfully link ho gaya!','success');
+  }, 800);
+}
 
 /* ==========================================
    SESSION RESTORE ON PAGE LOAD
