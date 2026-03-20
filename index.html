@@ -1035,7 +1035,7 @@ body::before {
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.8);
-  z-index: 500;
+  z-index: 9999;
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
   opacity: 0; pointer-events: none;
@@ -1850,39 +1850,136 @@ body::before {
 
 <!-- ===== MODALS ===== -->
 
-<!-- DEPOSIT MODAL -->
+<!-- DEPOSIT MODAL — UTR FLOW -->
 <div class="modal-overlay" id="depositModal" onclick="if(event.target===this)closeModal('depositModal')">
-  <div class="modal">
+  <div class="modal" style="max-width:480px">
     <button class="modal-close" onclick="closeModal('depositModal')">✕</button>
-    <h3>💰 Add Money</h3>
-    <div class="form-group">
-      <label>Amount (₹)</label>
-      <div class="input-wrap">
-        <span class="input-icon">₹</span>
-        <input type="text" id="dep-amount" placeholder="Minimum ₹20" style="padding-left:2.2rem">
+
+    <!-- STEP 1: Amount -->
+    <div id="dep-step1">
+      <h3>💰 Add Money</h3>
+      <p style="color:var(--muted);font-size:0.85rem;margin:0.5rem 0 1.5rem;line-height:1.5">Amount choose karo aur UPI se payment karo — UTR number submit karo, Admin verify karega!</p>
+
+      <div class="form-group">
+        <label>Amount (₹) <span style="color:var(--fire)">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">₹</span>
+          <input type="number" id="dep-amount" placeholder="Minimum ₹20" min="20" style="padding-left:2.2rem" oninput="updateUPIPreview()">
+        </div>
       </div>
-    </div>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.2rem">
-      <button onclick="setDepAmt(50)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹50</button>
-      <button onclick="setDepAmt(100)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹100</button>
-      <button onclick="setDepAmt(500)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹500</button>
-      <button onclick="setDepAmt(1000)" style="padding:0.35rem 0.8rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:2px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600">+₹1000</button>
-    </div>
-    <div class="form-group">
-      <label>Payment Method</label>
-      <div class="input-wrap">
-        <span class="input-icon">💳</span>
-        <select id="dep-method" style="width:100%;background:var(--dark3);border:1.5px solid var(--border);border-radius:4px;padding:0.75rem 0.9rem 0.75rem 2.6rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none">
-          <option>📱 UPI (Google Pay / PhonePe / Paytm)</option>
-          <option>🏦 Net Banking</option>
-          <option>💳 Debit / Credit Card</option>
-        </select>
+
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.2rem">
+        <button onclick="setDepAmt(50)"  style="padding:0.35rem 0.9rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;transition:all 0.15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">₹50</button>
+        <button onclick="setDepAmt(100)" style="padding:0.35rem 0.9rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;transition:all 0.15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">₹100</button>
+        <button onclick="setDepAmt(200)" style="padding:0.35rem 0.9rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;transition:all 0.15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">₹200</button>
+        <button onclick="setDepAmt(500)" style="padding:0.35rem 0.9rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;transition:all 0.15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">₹500</button>
+        <button onclick="setDepAmt(1000)" style="padding:0.35rem 0.9rem;background:var(--dark3);border:1px solid var(--border);color:var(--text);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;transition:all 0.15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">₹1000</button>
       </div>
+
+      <!-- UPI Payment Box -->
+      <div style="background:linear-gradient(135deg,#0a1a0a,#0d2a0d);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <span style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Payment Details</span>
+          <span style="background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);padding:0.2rem 0.6rem;border-radius:10px;font-size:0.72rem;font-weight:700">UPI</span>
+        </div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:0.4rem">UPI ID (Yahan paise bhejo)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+          <div style="font-family:'Orbitron';font-size:0.95rem;color:white;font-weight:700;letter-spacing:0.5px" id="upi-id-display">blazefire@upi</div>
+          <button onclick="copyUPI()" style="padding:0.3rem 0.8rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--green);border-radius:3px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:0.78rem;font-weight:700" id="copy-upi-btn">📋 Copy</button>
+        </div>
+        <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.2rem">Amount to Pay</div>
+          <div style="font-family:'Orbitron';font-size:1.4rem;font-weight:900;color:var(--gold)" id="upi-amount-preview">₹0</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="goDepStep2()">
+        <span class="btn-text">Maine Paise Bhej Diye ✅</span>
+        <div class="spinner"></div>
+      </button>
     </div>
-    <button class="btn-submit" onclick="processDeposit()">
-      <span class="btn-text">Deposit Karo ⚡</span>
-      <div class="spinner"></div>
-    </button>
+
+    <!-- STEP 2: UTR Entry -->
+    <div id="dep-step2" style="display:none">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem">
+        <button onclick="goDepStep1()" style="background:var(--dark3);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">←</button>
+        <h3 style="margin:0">🔢 UTR Number Daalo</h3>
+      </div>
+
+      <!-- Summary box -->
+      <div style="background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.25);border-radius:4px;padding:0.9rem 1rem;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Deposit Amount</div>
+          <div style="font-family:'Orbitron';font-size:1.4rem;font-weight:900;color:var(--gold)" id="dep-step2-amount">₹0</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">UPI ID</div>
+          <div style="font-size:0.88rem;color:var(--green);font-weight:600">blazefire@upi</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>UTR / Reference Number <span style="color:var(--fire)">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">🔢</span>
+          <input type="text" id="dep-utr" placeholder="12-digit UTR number" maxlength="22" oninput="validateUTR(this)">
+        </div>
+        <div style="font-size:0.76rem;color:var(--muted);margin-top:0.4rem">💡 UTR number apne UPI app ki transaction history mein milega</div>
+        <div class="field-msg" id="utr-msg"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Payment Method</label>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:0.4rem;background:var(--dark3);border:1px solid var(--border);padding:0.5rem 0.8rem;border-radius:3px;cursor:pointer;font-size:0.85rem;font-weight:600" id="pm-gpay">
+            <input type="radio" name="paymethod" value="Google Pay" style="accent-color:var(--fire)" checked onchange="selectPM(this)"> 📱 GPay
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;background:var(--dark3);border:1px solid var(--border);padding:0.5rem 0.8rem;border-radius:3px;cursor:pointer;font-size:0.85rem;font-weight:600">
+            <input type="radio" name="paymethod" value="PhonePe" style="accent-color:var(--fire)" onchange="selectPM(this)"> 💜 PhonePe
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;background:var(--dark3);border:1px solid var(--border);padding:0.5rem 0.8rem;border-radius:3px;cursor:pointer;font-size:0.85rem;font-weight:600">
+            <input type="radio" name="paymethod" value="Paytm" style="accent-color:var(--fire)" onchange="selectPM(this)"> 💙 Paytm
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;background:var(--dark3);border:1px solid var(--border);padding:0.5rem 0.8rem;border-radius:3px;cursor:pointer;font-size:0.85rem;font-weight:600">
+            <input type="radio" name="paymethod" value="Net Banking" style="accent-color:var(--fire)" onchange="selectPM(this)"> 🏦 Net Banking
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="submitDepositRequest(this)">
+        <span class="btn-text">📨 Submit Verification Request</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div id="dep-step3" style="display:none;text-align:center;padding:1rem 0">
+      <div style="font-size:4rem;margin-bottom:0.75rem">⏳</div>
+      <h3 style="font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:2px;margin-bottom:0.5rem;color:white">Request Submit Ho Gayi!</h3>
+      <p style="color:var(--muted);margin-bottom:1.2rem;line-height:1.6;font-size:0.9rem">
+        Tera deposit request Admin ke paas chala gaya.<br>
+        <strong style="color:var(--gold)">Admin UTR verify karega aur wallet mein manually add karega.</strong><br>
+        <span style="font-size:0.82rem">Typically 5–30 minutes mein ho jaata hai.</span>
+      </p>
+
+      <!-- Warning box -->
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:4px;padding:0.8rem 1rem;margin-bottom:1.2rem;text-align:left;display:flex;gap:0.6rem;align-items:flex-start">
+        <span style="font-size:1.1rem;flex-shrink:0">⚠️</span>
+        <div style="font-size:0.82rem;color:#fca5a5;line-height:1.5">
+          <strong>Fake UTR mat daalna!</strong> Admin actual UPI transaction se UTR match karega. Galat UTR pe request <strong>reject</strong> ho jaayegi aur account <strong>ban</strong> ho sakta hai.
+        </div>
+      </div>
+
+      <div style="background:var(--dark3);border:1px solid var(--border);border-radius:4px;padding:1rem;margin-bottom:1.2rem;text-align:left">
+        <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem">Request Details</div>
+        <div id="dep-req-summary"></div>
+      </div>
+
+      <button class="btn-submit" onclick="closeModal('depositModal')">
+        <span class="btn-text">OK, Got It! 👍</span>
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -2024,30 +2121,156 @@ body::before {
       <!-- TAB: TOURNAMENTS -->
       <div id="tab-tournaments" class="admin-tab" style="display:none">
         <div class="admin-topbar">
-          <div><h1>🏆 Tournament Management</h1><p>Tournaments dekho aur manage karo</p></div>
+          <div><h1>🏆 Tournament Management</h1><p>Tournaments add, edit aur delete karo — seedha users ko dikhega</p></div>
+          <button class="btn-submit" style="width:auto;padding:0.6rem 1.5rem;font-size:0.88rem" onclick="resetTournamentForm();openModal('addTournamentModal')">➕ Naya Tournament</button>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead>
-              <tr><th>Name</th><th>Type</th><th>Prize</th><th>Entry</th><th>Slots</th><th>Filled</th><th>Status</th></tr>
+              <tr><th>#</th><th>Tournament Name</th><th>Type</th><th>Prize Pool</th><th>Entry Fee</th><th>Slots</th><th>Filled</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody id="tournaments-admin-body"></tbody>
           </table>
+          <div class="pagination"><span id="t-count">0 tournaments</span></div>
         </div>
       </div>
 
       <!-- TAB: TRANSACTIONS -->
       <div id="tab-transactions" class="admin-tab" style="display:none">
         <div class="admin-topbar">
-          <div><h1>💰 Transactions</h1><p>Sab wallet transactions</p></div>
+          <div>
+            <h1>💰 Deposit Verification</h1>
+            <p>Users ke deposit requests verify karo aur wallet credit karo</p>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <select id="dep-filter" onchange="renderDepositRequests()" style="background:var(--dark3);border:1px solid var(--border);border-radius:4px;padding:0.55rem 0.8rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.88rem;outline:none;cursor:pointer">
+              <option value="all">All Requests</option>
+              <option value="pending">⏳ Pending</option>
+              <option value="approved">✅ Approved</option>
+              <option value="rejected">❌ Rejected</option>
+            </select>
+            <button class="btn-submit" style="width:auto;padding:0.55rem 1rem;font-size:0.85rem" onclick="renderDepositRequests()">🔄 Refresh</button>
+          </div>
         </div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3rem;text-align:center;color:var(--muted)">
-          <div style="font-size:3rem;margin-bottom:1rem">💳</div>
-          <p>Transaction history yahan dikhega jab users deposit/withdraw karenge.</p>
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem" id="dep-stats-row"></div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>UTR Number</th>
+                <th>Method</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dep-req-body"></tbody>
+          </table>
+          <div class="pagination"><span id="dep-count">0 requests</span></div>
         </div>
       </div>
 
     </main>
+  </div>
+</div>
+
+
+<!-- ADD / EDIT TOURNAMENT MODAL -->
+<div class="modal-overlay" id="addTournamentModal" onclick="if(event.target===this)closeModal('addTournamentModal')">
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto">
+    <button class="modal-close" onclick="closeModal('addTournamentModal')">✕</button>
+    <h3 id="t-modal-title">➕ Naya Tournament</h3>
+    <input type="hidden" id="t-edit-tid">
+
+    <div class="form-group" style="margin-top:1rem">
+      <label class="admin-modal-label">Tournament Name <span style="color:var(--fire)">*</span></label>
+      <div class="input-wrap">
+        <span class="input-icon">🏆</span>
+        <input type="text" id="t-name" placeholder="e.g. Booyah Battle Royale">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-group">
+        <label class="admin-modal-label">Mode <span style="color:var(--fire)">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">🎮</span>
+          <select id="t-type" style="width:100%;background:var(--dark3);border:1.5px solid var(--border);border-radius:4px;padding:0.75rem 0.9rem 0.75rem 2.6rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none">
+            <option value="solo">Solo</option>
+            <option value="duo">Duo</option>
+            <option value="squad">Squad</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Card Color</label>
+        <div class="input-wrap">
+          <span class="input-icon">🎨</span>
+          <select id="t-bg" style="width:100%;background:var(--dark3);border:1.5px solid var(--border);border-radius:4px;padding:0.75rem 0.9rem 0.75rem 2.6rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none">
+            <option value="bg1">🔴 Red/Fire</option>
+            <option value="bg2">🔵 Blue</option>
+            <option value="bg3">🟢 Green</option>
+            <option value="bg4">🟣 Purple</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-group">
+        <label class="admin-modal-label">Prize Pool (₹) <span style="color:var(--fire)">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">💰</span>
+          <input type="number" id="t-prize" placeholder="50000" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Entry Fee (₹) — 0 = Free</label>
+        <div class="input-wrap">
+          <span class="input-icon">🎟️</span>
+          <input type="number" id="t-entry" placeholder="49" min="0" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem">
+      <div class="form-group">
+        <label class="admin-modal-label">Total Slots <span style="color:var(--fire)">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">👥</span>
+          <input type="number" id="t-slots" placeholder="100" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="admin-modal-label">Filled (already joined)</label>
+        <div class="input-wrap">
+          <span class="input-icon">✅</span>
+          <input type="number" id="t-filled" placeholder="0" min="0" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="admin-modal-label">Status</label>
+      <div class="input-wrap">
+        <span class="input-icon">⚡</span>
+        <select id="t-status" style="width:100%;background:var(--dark3);border:1.5px solid var(--border);border-radius:4px;padding:0.75rem 0.9rem 0.75rem 2.6rem;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none">
+          <option value="active">✅ Active (Users ko dikhega)</option>
+          <option value="inactive">❌ Inactive (Hidden)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="saveTournament()">
+      <span class="btn-text" id="t-save-btn-text">🏆 Tournament Create Karo</span>
+      <div class="spinner"></div>
+    </button>
   </div>
 </div>
 
@@ -2119,6 +2342,42 @@ body::before {
    ========================================== */
 const LS_USERS = 'bf_users';
 const LS_SESSION = 'bf_session';
+const LS_TOURNAMENTS = 'bf_tournaments';
+const LS_TRANSACTIONS = 'bf_transactions';
+const LS_DEPOSITS = 'bf_deposits';
+
+function lsDefaultTournaments() {
+  return [
+    { tid:'t1', name:'Booyah Battle Royale', type:'solo', prize:'50000', entry:'49', slots:100, filled:100, bg:'bg1', badge:'LIVE', status:'active', createdAt: new Date().toLocaleDateString('en-IN') },
+    { tid:'t2', name:'Squad War Championship', type:'squad', prize:'100000', entry:'99', slots:25, filled:25, bg:'bg4', badge:'LIVE', status:'active', createdAt: new Date().toLocaleDateString('en-IN') },
+    { tid:'t3', name:'Headshot Masters', type:'solo', prize:'10000', entry:'19', slots:150, filled:150, bg:'bg3', badge:'LIVE', status:'active', createdAt: new Date().toLocaleDateString('en-IN') },
+  ];
+}
+
+function lsLoadTournaments() {
+  try {
+    const r = localStorage.getItem(LS_TOURNAMENTS);
+    if(r) return JSON.parse(r);
+  } catch(e) {}
+  const def = lsDefaultTournaments();
+  localStorage.setItem(LS_TOURNAMENTS, JSON.stringify(def));
+  return def;
+}
+
+function lsSaveTournaments() { localStorage.setItem(LS_TOURNAMENTS, JSON.stringify(APP.tournaments)); }
+
+function lsLoadTransactions() {
+  try { const r = localStorage.getItem(LS_TRANSACTIONS); if(r) return JSON.parse(r); } catch(e) {}
+  return [];
+}
+
+function lsSaveTransactions() { localStorage.setItem(LS_TRANSACTIONS, JSON.stringify(APP.transactions)); }
+
+function lsLoadDeposits() {
+  try { const r = localStorage.getItem(LS_DEPOSITS); if(r) return JSON.parse(r); } catch(e) {}
+  return [];
+}
+function lsSaveDeposits() { localStorage.setItem(LS_DEPOSITS, JSON.stringify(APP.deposits)); }
 
 function lsSaveUsers() { localStorage.setItem(LS_USERS, JSON.stringify(APP.users)); }
 function lsLoadUsers() {
@@ -2140,7 +2399,9 @@ function lsGetSession() { return localStorage.getItem(LS_SESSION); }
 const APP = {
   users: lsLoadUsers(),
   currentUser: null,
-  transactions: []
+  tournaments: lsLoadTournaments(),
+  transactions: lsLoadTransactions(),
+  deposits: lsLoadDeposits()
 };
 
 /* ==========================================
@@ -2383,14 +2644,7 @@ function showLoginError(msg) {
 /* ==========================================
    DASHBOARD
    ========================================== */
-const tournaments = [
-  { id:1, name:"Booyah Battle Royale", type:"solo", prize:"₹50,000", entry:"₹49", slots:100, filled:87, bg:"bg1", badge:"LIVE", bc:"bl" },
-  { id:2, name:"Duo Domination Cup", type:"duo", prize:"₹25,000", entry:"₹39", slots:50, filled:38, bg:"bg2", badge:"UPCOMING", bc:"bu" },
-  { id:3, name:"Daily Free Entry Solo", type:"solo", prize:"₹5,000", entry:"FREE", slots:200, filled:156, bg:"bg3", badge:"LIVE", bc:"bl" },
-  { id:4, name:"Squad War Championship", type:"squad", prize:"₹1,00,000", entry:"₹99", slots:25, filled:18, bg:"bg4", badge:"UPCOMING", bc:"bu" },
-  { id:5, name:"Headshot Masters", type:"solo", prize:"₹10,000", entry:"₹19", slots:150, filled:141, bg:"bg1", badge:"LIVE", bc:"bl" },
-  { id:6, name:"Friday Night Brawl", type:"duo", prize:"₹15,000", entry:"₹29", slots:80, filled:24, bg:"bg2", badge:"UPCOMING", bc:"bu" },
-];
+// Tournaments now loaded from APP.tournaments (localStorage)
 
 const players = [
   { rank:1, name:"xXSniper_KingXx", kills:1847, wins:234, earn:"₹1,24,500", color:"#FF4500" },
@@ -2430,17 +2684,30 @@ function loadDashboard(user) {
   const txs = [
     { lbl:'Account Created', time:user.createdAt, amt:'—', pos:true },
   ];
-  document.getElementById('w-txlist').innerHTML = txs.map(t=>`
-    <div class="tx-item">
-      <div><div class="tx-lbl">${t.lbl}</div><div class="tx-time">${t.time}</div></div>
-      <div class="${t.pos?'tx-pos':'tx-neg'}">${t.amt}</div>
-    </div>
-  `).join('');
-
+  renderTransactionHistory();
   renderTournaments('all');
   renderLeaderboard();
   renderTicker();
   renderRecentWinners();
+}
+
+function renderTransactionHistory() {
+  const el = document.getElementById('w-txlist');
+  if(!el) return;
+  const txs = APP.transactions.slice(0,6);
+  if(txs.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:0.85rem">Koi transaction nahi abhi. Deposit ya tournament join karo!</div>';
+    return;
+  }
+  el.innerHTML = txs.map(tx=>`
+    <div class="tx-item">
+      <div>
+        <div class="tx-lbl">${tx.type==='credit'?'⬆':'⬇'} ${tx.label}</div>
+        <div class="tx-time">${tx.date}</div>
+      </div>
+      <div class="${tx.type==='credit'?'tx-pos':'tx-neg'}">${tx.type==='credit'?'+':'-'}₹${tx.amount.toLocaleString('en-IN')}</div>
+    </div>
+  `).join('');
 }
 
 function animateBal(id, target) {
@@ -2455,29 +2722,48 @@ function animateBal(id, target) {
 }
 
 function renderTournaments(filter) {
-  const filtered = filter==='all' ? tournaments : filter==='free' ? tournaments.filter(t=>t.entry==='FREE') : tournaments.filter(t=>t.type===filter);
-  document.getElementById('tGrid').innerHTML = filtered.map(t=>`
+  const live = APP.tournaments.filter(t => t.status === 'active');
+  let filtered = filter==='all' ? live : filter==='free' ? live.filter(t=>t.entry==='0'||t.entry==='FREE') : live.filter(t=>t.type===filter);
+  if(filtered.length === 0) {
+    document.getElementById('tGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🎮</div>Is category mein koi tournament nahi hai abhi.</div>';
+    return;
+  }
+  const bgMap = {solo:'bg1',duo:'bg2',squad:'bg4'};
+  document.getElementById('tGrid').innerHTML = filtered.map(t=>{
+    const isFull = parseInt(t.filled) >= parseInt(t.slots);
+    const entryDisplay = (!t.entry || t.entry==='0') ? 'FREE' : '₹'+t.entry;
+    const prizeDisplay = '₹'+parseInt(t.prize).toLocaleString('en-IN');
+    const bg = t.bg || bgMap[t.type] || 'bg1';
+    return `
     <div class="t-card">
-      <div class="t-header ${t.bg}">
-        <span class="t-badge ${t.bc}">${t.badge}</span>
-        <span class="t-prize">${t.prize}</span>
+      <div class="t-header ${bg}">
+        <span class="t-badge bl">LIVE</span>
+        <span class="t-prize">${prizeDisplay}</span>
       </div>
       <div class="t-body">
         <div class="t-name">${t.name}</div>
         <div class="t-meta">
           <span class="t-tag">🎮 ${t.type.toUpperCase()}</span>
           <span class="t-tag">👥 ${t.slots} Slots</span>
-          <span class="t-tag">${t.badge==='LIVE'?'🔴 Live':'⏳ Soon'}</span>
+          <span class="t-tag">🔴 Live Now</span>
         </div>
-        <div class="t-progress-label"><span>${t.filled}/${t.slots} Players</span><span style="color:var(--fire)">${Math.round(t.filled/t.slots*100)}%</span></div>
-        <div class="pbar"><div class="pfill" style="width:${t.filled/t.slots*100}%"></div></div>
+        <div class="t-progress-label">
+          ${isFull
+            ? '<span style="color:var(--red);font-weight:700">🔒 FULL — '+t.filled+'/'+t.slots+' Players</span><span style="color:var(--green);font-weight:700">100%</span>'
+            : '<span>'+t.filled+'/'+t.slots+' Players</span><span style="color:var(--fire)">'+Math.round(parseInt(t.filled)/parseInt(t.slots)*100)+'%</span>'
+          }
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${isFull?100:Math.round(parseInt(t.filled)/parseInt(t.slots)*100)}%;${isFull?'background:linear-gradient(90deg,var(--green),#059669)':''}"></div></div>
         <div class="t-foot">
-          <div class="t-entry">Entry: <strong>${t.entry}</strong></div>
-          <button class="btn-join" onclick="joinTournament('${t.name}','${t.entry}')">Join</button>
+          <div class="t-entry">Entry: <strong>${entryDisplay}</strong></div>
+          ${isFull
+            ? '<button class="btn-join" style="background:#1f2937;border:1px solid var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none" disabled>🔒 Full</button>'
+            : '<button class="btn-join" onclick="joinTournament(''+t.tid+'',''+t.name+'',''+t.entry+'')">Join</button>'
+          }
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function filterT(btn, filter) {
@@ -2492,17 +2778,28 @@ function filterT(btn, filter) {
   renderTournaments(filter);
 }
 
-function joinTournament(name, fee) {
-  if(fee !== 'FREE') {
-    const amount = parseInt(fee.replace('₹',''));
-    if(APP.currentUser && APP.currentUser.wallet < amount) {
-      showToast('Wallet Low!','Pehle wallet mein money add karo 💳','error');
+function joinTournament(tid, name, entry) {
+  const fee = parseInt(entry) || 0;
+  if(fee > 0) {
+    if(!APP.currentUser || APP.currentUser.wallet < fee) {
+      showToast('Wallet Low! 💸','Pehle wallet mein money add karo','error');
       return;
     }
-    if(APP.currentUser) APP.currentUser.wallet -= amount;
+    APP.currentUser.wallet -= fee;
+    const tx = { txId:'tx'+Date.now(), type:'debit', label:'Tournament Entry: '+name, amount:fee, date:new Date().toLocaleString('en-IN') };
+    APP.transactions.unshift(tx);
+    lsSaveTransactions();
+    syncUserToStorage();
+  }
+  // Mark filled++
+  const ti = APP.tournaments.findIndex(t=>t.tid===tid);
+  if(ti!==-1 && parseInt(APP.tournaments[ti].filled) < parseInt(APP.tournaments[ti].slots)) {
+    APP.tournaments[ti].filled = String(parseInt(APP.tournaments[ti].filled)+1);
+    lsSaveTournaments();
   }
   updateBalDisplay();
-  showToast('Joined! 🎮', `"${name}" mein entry ho gayi! GL HF 🔥`, 'success');
+  renderTransactionHistory();
+  showToast('Joined! 🎮', '"'+name+'" mein entry ho gayi! GL HF 🔥', 'success');
 }
 
 function updateBalDisplay() {
@@ -2563,22 +2860,130 @@ function showForgotModal() { openModal('forgotModal'); }
 
 function setDepAmt(a) { document.getElementById('dep-amount').value = a; }
 
-function processDeposit() {
+/* ── DEPOSIT UTR FLOW ── */
+function updateUPIPreview() {
+  const amt = parseInt(document.getElementById('dep-amount').value) || 0;
+  document.getElementById('upi-amount-preview').textContent = '₹' + amt.toLocaleString('en-IN');
+}
+
+function setDepAmt(a) {
+  document.getElementById('dep-amount').value = a;
+  updateUPIPreview();
+}
+
+function copyUPI() {
+  const upi = 'blazefire@upi';
+  if(navigator.clipboard) navigator.clipboard.writeText(upi);
+  const btn = document.getElementById('copy-upi-btn');
+  btn.textContent = '✅ Copied!';
+  btn.style.color = 'var(--green)';
+  setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+}
+
+function goDepStep2() {
   const amt = parseInt(document.getElementById('dep-amount').value);
-  if(!amt || amt < 20) { showToast('Error','Minimum ₹20 deposit karo','error'); return; }
-  const btn = event.target.closest('button');
+  if(!amt || amt < 20) { showToast('Error','Minimum ₹20 daalo','error'); return; }
+  document.getElementById('dep-step2-amount').textContent = '₹' + amt.toLocaleString('en-IN');
+  document.getElementById('dep-step1').style.display = 'none';
+  document.getElementById('dep-step2').style.display = 'block';
+  document.getElementById('dep-utr').value = '';
+  document.getElementById('utr-msg').className = 'field-msg';
+}
+
+function goDepStep1() {
+  document.getElementById('dep-step1').style.display = 'block';
+  document.getElementById('dep-step2').style.display = 'none';
+}
+
+function validateUTR(el) {
+  const val = el.value.trim().replace(/\s/g,'');
+  el.classList.remove('error-field','success-field');
+  const msg = document.getElementById('utr-msg');
+  if(!val) { msg.className='field-msg'; return; }
+  // Check duplicate UTR
+  const existing = APP.deposits.find(d => d.utr === val);
+  if(existing) {
+    showFieldMsg('utr-msg','error','❌ Yeh UTR already use ho chuka hai!');
+    el.classList.add('error-field');
+  } else if(val.length < 10) {
+    showFieldMsg('utr-msg','error','⚠️ UTR number min 10 digits ka hota hai');
+    el.classList.add('error-field');
+  } else {
+    showFieldMsg('utr-msg','success','✓ UTR format sahi hai');
+    el.classList.add('success-field');
+  }
+}
+
+function selectPM(radio) {
+  document.querySelectorAll('[name="paymethod"]').forEach(r => {
+    r.closest('label').style.borderColor = 'var(--border)';
+    r.closest('label').style.color = '';
+  });
+  radio.closest('label').style.borderColor = 'var(--fire)';
+  radio.closest('label').style.color = 'var(--fire)';
+}
+
+function submitDepositRequest(btn) {
+  const amt = parseInt(document.getElementById('dep-amount').value);
+  const utr = document.getElementById('dep-utr').value.trim().replace(/\s/g,'');
+  const method = document.querySelector('[name="paymethod"]:checked')?.value || 'UPI';
+
+  if(!utr || utr.length < 10) { showToast('Error','Valid UTR number daalo!','error'); return; }
+
+  // Check duplicate UTR
+  if(APP.deposits.find(d => d.utr === utr)) {
+    showToast('Error','Yeh UTR already use ho chuka hai!','error');
+    return;
+  }
+
   btn.classList.add('loading');
   setTimeout(() => {
     btn.classList.remove('loading');
-    if(APP.currentUser) {
-      APP.currentUser.wallet += amt;
-      syncUserToStorage();
-    }
-    updateBalDisplay();
-    closeModal('depositModal');
-    showToast('Deposited! 💰', `₹${amt} wallet mein add ho gaya!`, 'success');
-  }, 1500);
+    const req = {
+      depId: 'DEP' + Date.now(),
+      userId: APP.currentUser.userId,
+      username: APP.currentUser.username,
+      email: APP.currentUser.email,
+      amount: amt,
+      utr: utr,
+      method: method,
+      status: 'pending',
+      submittedAt: new Date().toLocaleString('en-IN'),
+      verifiedAt: null
+    };
+    APP.deposits.push(req);
+    lsSaveDeposits();
+
+    // Show summary
+    document.getElementById('dep-req-summary').innerHTML = [
+      ['🆔 Request ID', req.depId],
+      ['💰 Amount', '₹'+amt.toLocaleString('en-IN')],
+      ['🔢 UTR Number', utr],
+      ['📱 Method', method],
+      ['🕐 Submitted', req.submittedAt],
+      ['⏳ Status', '<span style="color:var(--gold);font-weight:700">Pending Verification</span>']
+    ].map(([k,v])=>`
+      <div style="display:flex;justify-content:space-between;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem">
+        <span style="color:var(--muted)">${k}</span><span style="color:white;font-weight:600">${v}</span>
+      </div>`).join('');
+
+    document.getElementById('dep-step2').style.display = 'none';
+    document.getElementById('dep-step3').style.display = 'block';
+    showToast('Request Submit! ⏳', 'Admin verify karega aur wallet mein add karega!', 'success');
+  }, 1200);
 }
+
+function showDepositModal() {
+  // Reset to step 1
+  document.getElementById('dep-step1').style.display = 'block';
+  document.getElementById('dep-step2').style.display = 'none';
+  document.getElementById('dep-step3').style.display = 'none';
+  document.getElementById('dep-amount').value = '';
+  document.getElementById('upi-amount-preview').textContent = '₹0';
+  openModal('depositModal');
+}
+
+function processDeposit() { /* legacy — replaced */ }
 
 function sendReset() {
   const btn = event.target.closest('button');
@@ -2645,6 +3050,7 @@ function showAdminTab(tabId, navItem) {
   // Refresh tab content
   if(tabId === 'tab-users') renderUsersTable(1);
   if(tabId === 'tab-tournaments') renderTournamentsAdmin();
+  if(tabId === 'tab-transactions') renderDepositRequests();
 }
 
 function renderAdminPanel() {
@@ -2667,11 +3073,12 @@ function renderAdminStats() {
   const banned = users.filter(u => u.status === 'banned').length;
   const totalWallet = users.reduce((s, u) => s + (u.wallet || 0), 0);
 
+  const pendingDeps = (lsLoadDeposits()||[]).filter(d=>d.status==='pending').length;
   const stats = [
     { icon:'👥', val: users.length, lbl:'Total Users', cls:'asc-fire' },
     { icon:'✅', val: users.length - banned, lbl:'Active Users', cls:'asc-green' },
-    { icon:'🚫', val: banned, lbl:'Banned Users', cls:'asc-cyan' },
-    { icon:'💰', val: '₹' + totalWallet.toLocaleString('en-IN'), lbl:'Total Wallet Balance', cls:'asc-gold' },
+    { icon:'⏳', val: pendingDeps, lbl:'Pending Deposits', cls:'asc-gold' },
+    { icon:'💰', val: '₹' + totalWallet.toLocaleString('en-IN'), lbl:'Total Wallet Balance', cls:'asc-cyan' },
   ];
 
   document.getElementById('admin-stats-grid').innerHTML = stats.map(s => `
@@ -2844,6 +3251,14 @@ function executeConfirm() {
   setTimeout(() => {
     btn.classList.remove('loading');
     const idx = APP.users.findIndex(u => u.userId === confirmTargetId);
+    if(confirmAction === 'delTournament') {
+      APP.tournaments = lsLoadTournaments();
+      const ti = APP.tournaments.findIndex(t=>t.tid===confirmTargetId);
+      if(ti!==-1) { APP.tournaments.splice(ti,1); lsSaveTournaments(); showToast('Deleted! 🗑️','Tournament delete ho gaya.','info'); }
+      closeModal('confirmModal');
+      renderTournamentsAdmin();
+      return;
+    }
     if(idx !== -1) {
       if(confirmAction === 'ban') { APP.users[idx].status = 'banned'; showToast('User Banned 🚫', 'User ko ban kar diya gaya.', 'info'); }
       else if(confirmAction === 'unban') { APP.users[idx].status = 'active'; showToast('User Unbanned ✅', 'User ka access restore ho gaya.', 'success'); }
@@ -2858,30 +3273,233 @@ function executeConfirm() {
 }
 
 function renderTournamentsAdmin() {
-  const tList = [
-    { name:"Booyah Battle Royale", type:"Solo", prize:"₹50,000", entry:"₹49", slots:100, filled:87, badge:"LIVE" },
-    { name:"Duo Domination Cup", type:"Duo", prize:"₹25,000", entry:"₹39", slots:50, filled:38, badge:"UPCOMING" },
-    { name:"Daily Free Entry Solo", type:"Solo", prize:"₹5,000", entry:"FREE", slots:200, filled:156, badge:"LIVE" },
-    { name:"Squad War Championship", type:"Squad", prize:"₹1,00,000", entry:"₹99", slots:25, filled:18, badge:"UPCOMING" },
-  ];
-  document.getElementById('tournaments-admin-body').innerHTML = tList.map(t => `
-    <tr class="admin-tr">
-      <td style="color:white;font-weight:600">${t.name}</td>
-      <td><span class="badge-role-user">${t.type}</span></td>
-      <td style="font-family:'Orbitron';font-size:0.82rem;color:var(--gold)">${t.prize}</td>
-      <td style="color:var(--fire2);font-weight:600">${t.entry}</td>
+  APP.tournaments = lsLoadTournaments();
+  const list = APP.tournaments;
+  document.getElementById('t-count').textContent = list.length + ' tournament(s)';
+  document.getElementById('tournaments-admin-body').innerHTML = list.length ? list.map((t,i)=>{
+    const entryDisplay = (!t.entry||t.entry==='0') ? '<span style="color:var(--green)">FREE</span>' : '₹'+t.entry;
+    const prizeDisplay = '₹'+parseInt(t.prize).toLocaleString('en-IN');
+    const pct = Math.min(100, Math.round(parseInt(t.filled)/parseInt(t.slots)*100));
+    return `<tr class="admin-tr">
+      <td style="color:var(--muted);font-size:0.82rem">${i+1}</td>
+      <td style="color:white;font-weight:600;max-width:180px">${t.name}</td>
+      <td><span class="badge-role-user">${t.type.toUpperCase()}</span></td>
+      <td style="font-family:'Orbitron';font-size:0.82rem;color:var(--gold)">${prizeDisplay}</td>
+      <td style="font-weight:600">${entryDisplay}</td>
       <td style="color:var(--muted)">${t.slots}</td>
       <td>
         <div style="display:flex;align-items:center;gap:0.5rem">
-          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
-            <div style="height:100%;width:${Math.round(t.filled/t.slots*100)}%;background:linear-gradient(90deg,var(--fire),var(--gold));border-radius:2px"></div>
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;min-width:50px">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--fire),var(--gold));border-radius:2px"></div>
           </div>
-          <span style="font-size:0.78rem;color:var(--muted)">${t.filled}/${t.slots}</span>
+          <span style="font-size:0.75rem;color:var(--muted);white-space:nowrap">${t.filled}/${t.slots}</span>
         </div>
       </td>
-      <td><span class="${t.badge==='LIVE'?'badge-active':'badge-role-user'}">${t.badge}</span></td>
-    </tr>
-  `).join('');
+      <td><span class="${t.status==='active'?'badge-active':'badge-banned'}">${t.status==='active'?'Active':'Hidden'}</span></td>
+      <td>
+        <div class="action-btns">
+          <button class="abtn abtn-view" onclick="editTournament('${t.tid}')">✏️ Edit</button>
+          <button class="abtn abtn-ban" onclick="toggleTStatus('${t.tid}')">${t.status==='active'?'🙈 Hide':'👁️ Show'}</button>
+          <button class="abtn abtn-delete" onclick="showConfirm('delTournament','${t.tid}')">🗑️ Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty-state"><div class="es-icon">🏆</div>Koi tournament nahi — upar "+ Naya Tournament" se banao!</div></td></tr>`;
+}
+
+function saveTournament() {
+  const tid = document.getElementById('t-edit-tid').value;
+  const name = document.getElementById('t-name').value.trim();
+  const type = document.getElementById('t-type').value;
+  const bg = document.getElementById('t-bg').value;
+  const prize = document.getElementById('t-prize').value;
+  const entry = document.getElementById('t-entry').value || '0';
+  const slots = document.getElementById('t-slots').value;
+  const filled = document.getElementById('t-filled').value || '0';
+  const status = document.getElementById('t-status').value;
+
+  if(!name) { showToast('Error','Tournament name daalo!','error'); return; }
+  if(!prize || parseInt(prize) < 1) { showToast('Error','Prize pool daalo!','error'); return; }
+  if(!slots || parseInt(slots) < 1) { showToast('Error','Slots daalo!','error'); return; }
+  if(parseInt(filled) > parseInt(slots)) { showToast('Error','Filled slots > Total slots nahi ho sakta!','error'); return; }
+
+  const btn = event.target.closest('button');
+  btn.classList.add('loading');
+
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    APP.tournaments = lsLoadTournaments();
+    if(tid) {
+      // Edit existing
+      const idx = APP.tournaments.findIndex(t=>t.tid===tid);
+      if(idx!==-1) {
+        APP.tournaments[idx] = { ...APP.tournaments[idx], name, type, bg, prize, entry, slots, filled, status };
+        showToast('Updated! ✅', '"'+name+'" tournament update ho gaya!', 'success');
+      }
+    } else {
+      // New tournament
+      const newT = { tid:'t'+Date.now(), name, type, bg, prize, entry, slots, filled, status, badge:'LIVE', createdAt: new Date().toLocaleDateString('en-IN') };
+      APP.tournaments.push(newT);
+      showToast('Created! 🏆', '"'+name+'" tournament live ho gaya!', 'success');
+    }
+    lsSaveTournaments();
+    closeModal('addTournamentModal');
+    resetTournamentForm();
+    renderTournamentsAdmin();
+    renderAdminStats();
+  }, 700);
+}
+
+function editTournament(tid) {
+  const t = APP.tournaments.find(x=>x.tid===tid);
+  if(!t) return;
+  document.getElementById('t-modal-title').textContent = '✏️ Tournament Edit Karo';
+  document.getElementById('t-save-btn-text').textContent = '💾 Changes Save Karo';
+  document.getElementById('t-edit-tid').value = tid;
+  document.getElementById('t-name').value = t.name;
+  document.getElementById('t-type').value = t.type;
+  document.getElementById('t-bg').value = t.bg || 'bg1';
+  document.getElementById('t-prize').value = t.prize;
+  document.getElementById('t-entry').value = t.entry || '0';
+  document.getElementById('t-slots').value = t.slots;
+  document.getElementById('t-filled').value = t.filled;
+  document.getElementById('t-status').value = t.status || 'active';
+  openModal('addTournamentModal');
+}
+
+function resetTournamentForm() {
+  document.getElementById('t-modal-title').textContent = '➕ Naya Tournament';
+  document.getElementById('t-save-btn-text').textContent = '🏆 Tournament Create Karo';
+  document.getElementById('t-edit-tid').value = '';
+  ['t-name','t-prize','t-entry','t-slots','t-filled'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = id==='t-entry'||id==='t-filled' ? '0' : '';
+  });
+  document.getElementById('t-type').value = 'solo';
+  document.getElementById('t-bg').value = 'bg1';
+  document.getElementById('t-status').value = 'active';
+}
+
+function toggleTStatus(tid) {
+  APP.tournaments = lsLoadTournaments();
+  const idx = APP.tournaments.findIndex(t=>t.tid===tid);
+  if(idx!==-1) {
+    APP.tournaments[idx].status = APP.tournaments[idx].status==='active' ? 'inactive' : 'active';
+    lsSaveTournaments();
+    renderTournamentsAdmin();
+    showToast('Updated!', 'Tournament status change ho gaya.', 'success');
+  }
+}
+
+function renderDepositRequests() {
+  APP.deposits = lsLoadDeposits();
+  const filter = document.getElementById('dep-filter')?.value || 'all';
+  const list = filter === 'all' ? APP.deposits : APP.deposits.filter(d=>d.status===filter);
+  const allD = APP.deposits;
+
+  // Stats
+  const pending   = allD.filter(d=>d.status==='pending').length;
+  const approved  = allD.filter(d=>d.status==='approved').length;
+  const rejected  = allD.filter(d=>d.status==='rejected').length;
+  const totalAmt  = allD.filter(d=>d.status==='approved').reduce((s,d)=>s+d.amount,0);
+
+  document.getElementById('dep-stats-row').innerHTML = [
+    { icon:'⏳', val:pending,  lbl:'Pending',  cls:'asc-gold'  },
+    { icon:'✅', val:approved, lbl:'Approved', cls:'asc-green' },
+    { icon:'❌', val:rejected, lbl:'Rejected', cls:'asc-cyan'  },
+    { icon:'💰', val:'₹'+totalAmt.toLocaleString('en-IN'), lbl:'Total Approved', cls:'asc-fire' },
+  ].map(s=>`
+    <div class="admin-stat-card ${s.cls}" style="padding:1rem">
+      <div style="font-size:1.2rem;margin-bottom:0.3rem">${s.icon}</div>
+      <div class="asc-val" style="font-size:1.5rem">${s.val}</div>
+      <div class="asc-lbl">${s.lbl}</div>
+    </div>`).join('');
+
+  document.getElementById('dep-count').textContent = list.length + ' request(s)';
+  const body = document.getElementById('dep-req-body');
+  if(!body) return;
+
+  body.innerHTML = list.length ? [...list].reverse().map(d=>{
+    const statusBadge = d.status==='pending'
+      ? '<span class="badge-role-user" style="color:var(--gold);border-color:rgba(255,215,0,0.3);background:rgba(255,215,0,0.1)">⏳ Pending</span>'
+      : d.status==='approved'
+        ? '<span class="badge-active">✅ Approved</span>'
+        : '<span class="badge-banned">❌ Rejected</span>';
+
+    const actions = d.status==='pending' ? `
+      <div class="action-btns">
+        <button class="abtn abtn-unban" onclick="approveDeposit('${d.depId}')">✅ Approve</button>
+        <button class="abtn abtn-ban"   onclick="rejectDeposit('${d.depId}')">❌ Reject</button>
+      </div>` : `<span style="color:var(--muted);font-size:0.78rem">${d.verifiedAt||'—'}</span>`;
+
+    return `<tr class="admin-tr">
+      <td style="font-family:'Orbitron';font-size:0.72rem;color:var(--cyan)">${d.depId}</td>
+      <td>
+        <div class="user-cell">
+          <div class="user-av" style="width:28px;height:28px;font-size:0.78rem">${d.username[0].toUpperCase()}</div>
+          <div><div class="user-nm" style="font-size:0.88rem">${d.username}</div><div class="user-id" style="font-size:0.7rem">${d.email}</div></div>
+        </div>
+      </td>
+      <td style="font-family:'Orbitron';font-size:0.9rem;font-weight:900;color:var(--gold)">₹${d.amount.toLocaleString('en-IN')}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <span style="font-family:'Orbitron';font-size:0.78rem;color:white;letter-spacing:0.5px">${d.utr}</span>
+          <button onclick="navigator.clipboard&&navigator.clipboard.writeText('${d.utr}');showToast('Copied!','UTR copied ✅','success')" style="padding:0.15rem 0.45rem;background:var(--dark3);border:1px solid var(--border);color:var(--muted);border-radius:2px;cursor:pointer;font-size:0.7rem">Copy</button>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:0.85rem">📱 ${d.method}</td>
+      <td style="color:var(--muted);font-size:0.78rem;white-space:nowrap">${d.submittedAt}</td>
+      <td>${statusBadge}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><div class="es-icon">💰</div>${filter==='pending'?'Koi pending request nahi!':'Koi deposit request nahi abhi.'}</div></td></tr>`;
+}
+
+function renderAdminTransactions() { renderDepositRequests(); }
+
+function approveDeposit(depId) {
+  APP.deposits = lsLoadDeposits();
+  const idx = APP.deposits.findIndex(d=>d.depId===depId);
+  if(idx===-1) return;
+  const dep = APP.deposits[idx];
+  if(dep.status!=='pending') { showToast('Error','Already processed hai!','error'); return; }
+
+  // Credit wallet
+  const uidx = APP.users.findIndex(u=>u.userId===dep.userId);
+  if(uidx!==-1) {
+    APP.users[uidx].wallet = (APP.users[uidx].wallet||0) + dep.amount;
+    lsSaveUsers();
+    // If current user is logged in and it's them
+    if(APP.currentUser && APP.currentUser.userId===dep.userId) {
+      APP.currentUser.wallet = APP.users[uidx].wallet;
+    }
+  }
+
+  // Add transaction record
+  const tx = { txId:'tx'+Date.now(), type:'credit', label:'Deposit Approved (UTR: '+dep.utr+')', amount:dep.amount, userId:dep.userId, date:new Date().toLocaleString('en-IN') };
+  APP.transactions.unshift(tx);
+  lsSaveTransactions();
+
+  // Update deposit status
+  APP.deposits[idx].status = 'approved';
+  APP.deposits[idx].verifiedAt = new Date().toLocaleString('en-IN');
+  lsSaveDeposits();
+
+  renderDepositRequests();
+  renderAdminStats();
+  showToast('Approved ✅', dep.username+' ke wallet mein ₹'+dep.amount.toLocaleString('en-IN')+' add ho gaya!', 'success');
+}
+
+function rejectDeposit(depId) {
+  APP.deposits = lsLoadDeposits();
+  const idx = APP.deposits.findIndex(d=>d.depId===depId);
+  if(idx===-1) return;
+  if(APP.deposits[idx].status!=='pending') { showToast('Error','Already processed hai!','error'); return; }
+  APP.deposits[idx].status = 'rejected';
+  APP.deposits[idx].verifiedAt = new Date().toLocaleString('en-IN');
+  lsSaveDeposits();
+  renderDepositRequests();
+  showToast('Rejected ❌', 'Deposit request reject ho gayi.', 'info');
 }
 
 function exportUsers() {
@@ -2896,6 +3514,7 @@ function exportUsers() {
   a.click();
   showToast('Exported! 📥', 'Users CSV download ho gaya.', 'success');
 }
+
 
 /* ==========================================
    SESSION RESTORE ON PAGE LOAD
