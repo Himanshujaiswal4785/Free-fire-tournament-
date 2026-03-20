@@ -2723,46 +2723,54 @@ function animateBal(id, target) {
 
 function renderTournaments(filter) {
   const live = APP.tournaments.filter(t => t.status === 'active');
-  let filtered = filter==='all' ? live : filter==='free' ? live.filter(t=>t.entry==='0'||t.entry==='FREE') : live.filter(t=>t.type===filter);
+  let filtered = filter === 'all' ? live
+    : filter === 'free' ? live.filter(t => t.entry === '0' || t.entry === 'FREE' || !t.entry)
+    : live.filter(t => t.type === filter);
+
   if(filtered.length === 0) {
     document.getElementById('tGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)"><div style="font-size:3rem;margin-bottom:1rem">🎮</div>Is category mein koi tournament nahi hai abhi.</div>';
     return;
   }
-  const bgMap = {solo:'bg1',duo:'bg2',squad:'bg4'};
-  document.getElementById('tGrid').innerHTML = filtered.map(t=>{
-    const isFull = parseInt(t.filled) >= parseInt(t.slots);
-    const entryDisplay = (!t.entry || t.entry==='0') ? 'FREE' : '₹'+t.entry;
-    const prizeDisplay = '₹'+parseInt(t.prize).toLocaleString('en-IN');
-    const bg = t.bg || bgMap[t.type] || 'bg1';
-    return `
-    <div class="t-card">
-      <div class="t-header ${bg}">
-        <span class="t-badge bl">LIVE</span>
-        <span class="t-prize">${prizeDisplay}</span>
-      </div>
-      <div class="t-body">
-        <div class="t-name">${t.name}</div>
-        <div class="t-meta">
-          <span class="t-tag">🎮 ${t.type.toUpperCase()}</span>
-          <span class="t-tag">👥 ${t.slots} Slots</span>
-          <span class="t-tag">🔴 Live Now</span>
-        </div>
-        <div class="t-progress-label">
-          ${isFull
-            ? '<span style="color:var(--red);font-weight:700">🔒 FULL — '+t.filled+'/'+t.slots+' Players</span><span style="color:var(--green);font-weight:700">100%</span>'
-            : '<span>'+t.filled+'/'+t.slots+' Players</span><span style="color:var(--fire)">'+Math.round(parseInt(t.filled)/parseInt(t.slots)*100)+'%</span>'
-          }
-        </div>
-        <div class="pbar"><div class="pfill" style="width:${isFull?100:Math.round(parseInt(t.filled)/parseInt(t.slots)*100)}%;${isFull?'background:linear-gradient(90deg,var(--green),#059669)':''}"></div></div>
-        <div class="t-foot">
-          <div class="t-entry">Entry: <strong>${entryDisplay}</strong></div>
-          ${isFull
-            ? '<button class="btn-join" style="background:#1f2937;border:1px solid var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none" disabled>🔒 Full</button>'
-            : '<button class="btn-join" onclick="joinTournament(''+t.tid+'',''+t.name+'',''+t.entry+'')">Join</button>'
-          }
-        </div>
-      </div>
-    </div>`;
+
+  const bgMap = { solo:'bg1', duo:'bg2', squad:'bg4' };
+
+  document.getElementById('tGrid').innerHTML = filtered.map(function(t) {
+    var isFull = parseInt(t.filled) >= parseInt(t.slots);
+    var entryDisplay = (!t.entry || t.entry === '0') ? 'FREE' : '&#8377;' + t.entry;
+    var prizeDisplay = '&#8377;' + parseInt(t.prize).toLocaleString('en-IN');
+    var bg = t.bg || bgMap[t.type] || 'bg1';
+    var pct = isFull ? 100 : Math.round(parseInt(t.filled) / parseInt(t.slots) * 100);
+
+    var progressHTML = isFull
+      ? '<span style="color:var(--red);font-weight:700">&#128274; FULL &mdash; ' + t.filled + '/' + t.slots + ' Players</span><span style="color:var(--green);font-weight:700">100%</span>'
+      : '<span>' + t.filled + '/' + t.slots + ' Players</span><span style="color:var(--fire)">' + pct + '%</span>';
+
+    var fillStyle = isFull ? 'width:100%;background:linear-gradient(90deg,var(--green),#059669)' : 'width:' + pct + '%';
+
+    var joinBtn = isFull
+      ? '<button class="btn-join" style="background:#1f2937;border:1px solid var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none" disabled>&#128274; Full</button>'
+      : '<button class="btn-join" data-tid="' + t.tid + '" data-name="' + t.name.replace(/"/g,'') + '" data-entry="' + t.entry + '" onclick="joinFromBtn(this)">Join</button>';
+
+    return '<div class="t-card">'
+      + '<div class="t-header ' + bg + '">'
+      + '<span class="t-badge bl">LIVE</span>'
+      + '<span class="t-prize">' + prizeDisplay + '</span>'
+      + '</div>'
+      + '<div class="t-body">'
+      + '<div class="t-name">' + t.name + '</div>'
+      + '<div class="t-meta">'
+      + '<span class="t-tag">&#127918; ' + t.type.toUpperCase() + '</span>'
+      + '<span class="t-tag">&#128101; ' + t.slots + ' Slots</span>'
+      + '<span class="t-tag">&#128308; Live Now</span>'
+      + '</div>'
+      + '<div class="t-progress-label">' + progressHTML + '</div>'
+      + '<div class="pbar"><div class="pfill" style="' + fillStyle + '"></div></div>'
+      + '<div class="t-foot">'
+      + '<div class="t-entry">Entry: <strong>' + entryDisplay + '</strong></div>'
+      + joinBtn
+      + '</div>'
+      + '</div>'
+      + '</div>';
   }).join('');
 }
 
@@ -2776,6 +2784,13 @@ function filterT(btn, filter) {
   btn.style.borderColor = 'var(--fire)';
   btn.style.color = 'white';
   renderTournaments(filter);
+}
+
+function joinFromBtn(btn) {
+  var tid   = btn.getAttribute('data-tid');
+  var name  = btn.getAttribute('data-name');
+  var entry = btn.getAttribute('data-entry');
+  joinTournament(tid, name, entry);
 }
 
 function joinTournament(tid, name, entry) {
